@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@layer base {
+
+  html,
+  body,
+  #app {
+    background-color: #111111;
+    color: #f8fafc;
+    /* Light text for readability */
+    min-height: 100vh;
+
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator {
+      filter: invert(79%) sepia(71%) saturate(1044%) hue-rotate(326deg)
+        brightness(101%) contrast(97%);
+      cursor: pointer;
+    }
+  }
+}
