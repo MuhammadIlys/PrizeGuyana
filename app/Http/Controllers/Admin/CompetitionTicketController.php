@@ -57,6 +57,8 @@ class CompetitionTicketController extends Controller
     /**
      * Display competition tickets and Instant Win allocation information.
      */
+
+
     public function show(Request $request, $competitionId)
     {
         $competitionId = $this->decryptId($competitionId);
@@ -182,6 +184,101 @@ class CompetitionTicketController extends Controller
                 ];
             });
 
+        // Active Scheduled Draw prizes and their winner counts
+        $scheduledDrawPrizes = DB::table('competition_prizes as p')
+            ->leftJoin('prize_winning_tickets as pwt', function ($join) {
+                $join->on('pwt.prize_id', '=', 'p.id')
+                    ->where('pwt.winning_method', '=', 'draw');
+            })
+            ->where('p.competition_id', $competitionId)
+            ->where('p.winning_method', 'draw')
+            ->where('p.status', 'active')
+            ->groupBy(
+                'p.id',
+                'p.name',
+                'p.description',
+                'p.prize_type',
+                'p.prize_value',
+                'p.currency',
+                'p.quantity'
+            )
+            ->select(
+                'p.id',
+                'p.name',
+                'p.description',
+                'p.prize_type',
+                'p.prize_value',
+                'p.currency',
+                'p.quantity',
+                DB::raw('COUNT(pwt.id) as allocated_quantity')
+            )
+            ->orderBy('p.sort_order')
+            ->get()
+            ->map(function ($prize) {
+                return [
+                    'id' => $prize->id,
+                    'name' => $prize->name,
+                    'description' => $prize->description,
+                    'prize_type' => $prize->prize_type,
+                    'prize_value' => $prize->prize_value,
+                    'currency' => $prize->currency,
+                    'quantity' => (int) $prize->quantity,
+                    'allocated_quantity' => (int) $prize->allocated_quantity,
+                ];
+            });
+
+        // Scheduled Draw winners
+        $scheduledDrawWinners = DB::table('prize_winning_tickets as pwt')
+            ->join('competition_tickets as t', 't.id', '=', 'pwt.ticket_id')
+            ->join('competition_prizes as p', 'p.id', '=', 'pwt.prize_id')
+            ->leftJoin('users as u', 'u.id', '=', 'pwt.winner_user_id')
+            ->where('pwt.competition_id', $competitionId)
+            ->where('pwt.winning_method', 'draw')
+            ->select(
+                'pwt.id',
+                'pwt.prize_id',
+                'pwt.ticket_id',
+                'pwt.winner_user_id',
+                'pwt.order_id',
+                'pwt.status',
+                'pwt.won_at',
+                'pwt.claimed_at',
+                'pwt.fulfilled_at',
+                'pwt.rejection_reason',
+                'p.name as prize_name',
+                'p.prize_type',
+                'p.prize_value',
+                'p.currency',
+                't.ticket_number',
+                'u.first_name',
+                'u.last_name'
+            )
+            ->orderBy('p.sort_order')
+            ->orderBy('pwt.id')
+            ->get()
+            ->map(function ($winner) {
+                return [
+                    'id' => $winner->id,
+                    'prize_id' => $winner->prize_id,
+                    'prize_name' => $winner->prize_name,
+                    'prize_type' => $winner->prize_type,
+                    'prize_value' => $winner->prize_value,
+                    'currency' => $winner->currency,
+                    'ticket_number' => $winner->ticket_number,
+                    'winner_user_id' => $winner->winner_user_id,
+                    'winner_name' => trim(
+                        ($winner->first_name ?? '') . ' ' .
+                            ($winner->last_name ?? '')
+                    ) ?: 'Unknown Customer',
+                    'order_id' => $winner->order_id,
+                    'status' => $winner->status,
+                    'won_at' => $winner->won_at,
+                    'claimed_at' => $winner->claimed_at,
+                    'fulfilled_at' => $winner->fulfilled_at,
+                    'rejection_reason' => $winner->rejection_reason,
+                ];
+            });
+
         // Check whether Instant Win allocations exist
         $allocationExists = DB::table('prize_winning_tickets')
             ->where('competition_id', $competitionId)
@@ -212,7 +309,14 @@ class CompetitionTicketController extends Controller
                 'status' => $status,
             ],
 
+            // Instant Win prizes
             'prizes' => $prizes,
+
+            // Scheduled Draw prizes
+            'scheduledDrawPrizes' => $scheduledDrawPrizes,
+
+            // Scheduled Draw winner records
+            'scheduledDrawWinners' => $scheduledDrawWinners,
 
             'allocation' => [
                 'exists' => $allocationExists,
@@ -222,6 +326,8 @@ class CompetitionTicketController extends Controller
             ],
         ]);
     }
+
+
 
     /**
      * Generate a random preview of Instant Win ticket allocations.
@@ -368,7 +474,12 @@ class CompetitionTicketController extends Controller
     public function allocateWinningTickets(Request $request, $competitionId)
     {
         $competitionId = $this->decryptId($competitionId);
-
+        $competition = DB::table('my_competitions')->where('id', $competitionId)->first();
+        if ($competition) {
+            DB::table('my_competitions')
+                ->where('id', $competitionId)
+                ->update(['status' => 'published']);
+        }
         $validated = $request->validate([
             'allocations' => ['required', 'array', 'min:1'],
             'allocations.*.prize_id' => ['required', 'integer', 'min:1'],
@@ -529,6 +640,177 @@ class CompetitionTicketController extends Controller
             return [
                 'success' => true,
                 'message' => count($allocationRows) . ' Instant Win tickets allocated successfully.',
+            ];
+        }, 3);
+
+        return back()->with(
+            $result['success'] ? 'success' : 'error',
+            $result['message']
+        );
+    }
+
+    /**
+     * Execute and permanently save the scheduled competition draw.
+     */
+    public function finishDraw($competitionId)
+    {
+        $competitionId = $this->decryptId($competitionId);
+
+        $result = DB::transaction(function () use ($competitionId) {
+
+            $competition = DB::table('my_competitions')
+                ->where('id', $competitionId)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$competition) {
+                return [
+                    'success' => false,
+                    'message' => 'Competition not found.',
+                ];
+            }
+
+            // Prevent duplicate draw execution.
+            if ($competition->status === 'completed') {
+                return [
+                    'success' => false,
+                    'message' => 'This competition has already been completed.',
+                ];
+            }
+
+            if ($competition->status !== 'active') {
+                return [
+                    'success' => false,
+                    'message' => 'Only active competitions can be completed.',
+                ];
+            }
+
+            // Get active scheduled draw prizes.
+            $prizes = DB::table('competition_prizes')
+                ->where('competition_id', $competitionId)
+                ->where('winning_method', 'draw')
+                ->where('status', 'active')
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
+
+            if ($prizes->isEmpty()) {
+                return [
+                    'success' => false,
+                    'message' => 'No active scheduled draw prizes were found.',
+                ];
+            }
+
+            foreach ($prizes as $prize) {
+                if ((int) $prize->quantity < 1) {
+                    return [
+                        'success' => false,
+                        'message' => "Invalid quantity for prize: {$prize->name}.",
+                    ];
+                }
+            }
+
+            $requiredWinners = (int) $prizes->sum('quantity');
+
+            // Count eligible purchased tickets.
+            // Tickets that have already won ANY prize are excluded.
+            $eligibleTickets = DB::table('competition_tickets as t')
+                ->where('t.competition_id', $competitionId)
+                ->where('t.status', 'assigned')
+                ->whereNotNull('t.user_id')
+                ->whereNotNull('t.order_id')
+                ->whereNotExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('prize_winning_tickets as pwt')
+                        ->whereColumn('pwt.ticket_id', 't.id');
+                })
+                ->count();
+
+            if ($eligibleTickets < $requiredWinners) {
+                return [
+                    'success' => false,
+                    'message' => "Not enough eligible tickets. Required: {$requiredWinners}; available: {$eligibleTickets}.",
+                ];
+            }
+
+            // Randomly select unique eligible tickets.
+            $selectedTickets = DB::table('competition_tickets as t')
+                ->where('t.competition_id', $competitionId)
+                ->where('t.status', 'assigned')
+                ->whereNotNull('t.user_id')
+                ->whereNotNull('t.order_id')
+                ->whereNotExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('prize_winning_tickets as pwt')
+                        ->whereColumn('pwt.ticket_id', 't.id');
+                })
+                ->inRandomOrder()
+                ->limit($requiredWinners)
+                ->lockForUpdate()
+                ->get([
+                    't.id',
+                    't.user_id',
+                    't.order_id',
+                ]);
+
+            if ($selectedTickets->count() !== $requiredWinners) {
+                return [
+                    'success' => false,
+                    'message' => 'Unable to select enough eligible tickets. Please try again.',
+                ];
+            }
+
+            $allocationRows = [];
+            $ticketOffset = 0;
+            $now = now();
+
+            // Assign randomly selected tickets to configured prizes.
+            foreach ($prizes as $prize) {
+
+                $quantity = (int) $prize->quantity;
+
+                $prizeTickets = $selectedTickets->slice(
+                    $ticketOffset,
+                    $quantity
+                );
+
+                $ticketOffset += $quantity;
+
+                foreach ($prizeTickets as $ticket) {
+                    $allocationRows[] = [
+                        'competition_id' => $competitionId,
+                        'prize_id' => $prize->id,
+                        'ticket_id' => $ticket->id,
+                        'winning_method' => 'draw',
+                        'status' => 'won',
+                        'winner_user_id' => $ticket->user_id,
+                        'order_id' => $ticket->order_id,
+                        'won_at' => $now,
+                        'claimed_at' => null,
+                        'fulfilled_at' => null,
+                        'notes' => null,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                }
+            }
+
+            // Save all scheduled draw winners.
+            DB::table('prize_winning_tickets')->insert($allocationRows);
+
+            // Complete the competition at the moment of execution.
+            DB::table('my_competitions')
+                ->where('id', $competitionId)
+                ->update([
+                    'status' => 'completed',
+                    'completed_at' => $now,
+                    'updated_at' => $now,
+                ]);
+
+            return [
+                'success' => true,
+                'message' => count($allocationRows) . ' scheduled draw winners selected successfully.',
             ];
         }, 3);
 

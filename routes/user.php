@@ -39,6 +39,17 @@ Route::middleware('auth')->group(function () {
             Route::get('/', 'index')->name('index');
         });
 
+    Route::get('/my-prizes/{winningTicket}', [
+        TicketsController::class,
+        'showPrize'
+    ])->name('prizes.show');
+
+    Route::post(
+    '/my-prizes/{winningTicket}/claim',
+    [TicketsController::class, 'submitPrizeClaim']
+)->name('prizes.claim');
+
+
     Route::prefix('entries')
         ->name('entries.')
         ->controller(EntriesController::class)

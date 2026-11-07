@@ -22,7 +22,7 @@ const addingToCart = ref(false);
 const cartError = ref('');
 
 const showQualificationModal = ref(false);
-const modalQualificationQuestions  = ref([]);
+const modalQualificationQuestions = ref([]);
 const qualificationAnswers = ref({});
 const qualificationError = ref('');
 const submittingQualification = ref(false);
@@ -220,83 +220,83 @@ async function enterCompetition() {
 }
 
 async function submitQualification() {
-        console.log('Submit qualification clicked');
-        if (submittingQualification.value) return;
+    console.log('Submit qualification clicked');
+    if (submittingQualification.value) return;
 
-        qualificationError.value = '';
+    qualificationError.value = '';
 
-        // Ensure every question has an answer.
-        const unanswered = modalQualificationQuestions.value.some(
-            question => !qualificationAnswers.value[question.id]
+    // Ensure every question has an answer.
+    const unanswered = modalQualificationQuestions.value.some(
+        question => !qualificationAnswers.value[question.id]
+    );
+
+    if (unanswered) {
+        qualificationError.value = 'Please answer all qualification questions.';
+        return;
+    }
+
+    submittingQualification.value = true;
+
+    try {
+        const response = await fetch(
+            route('competition.qualification', props.competition.id),
+            {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN':
+                        document.querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute('content') ?? '',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({
+                    answers: qualificationAnswers.value,
+                    quantity: quantity.value,
+                }),
+            }
         );
 
-        if (unanswered) {
-            qualificationError.value = 'Please answer all qualification questions.';
-            return;
-        }
+        const data = await response.json();
 
-        submittingQualification.value = true;
-
-        try {
-            const response = await fetch(
-                route('competition.qualification', props.competition.id),
-                {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: {
-                        Accept: 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN':
-                            document.querySelector('meta[name="csrf-token"]')
-                                ?.getAttribute('content') ?? '',
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                    body: JSON.stringify({
-                        answers: qualificationAnswers.value,
-                        quantity: quantity.value,
-                    }),
-                }
-            );
-
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
-                qualificationError.value =
-                    data.message || 'Your answers could not be verified.';
-                return;
-            }
-
-            // All answers are correct. Add the competition to the cart.
-            router.post(
-                route('cart.add'),
-                {
-                    competition_id: props.competition.id,
-                    quantity: quantity.value,
-                },
-                {
-                    onError: (errors) => {
-                        qualificationError.value =
-                            errors.message || 'Unable to add the competition to your cart.';
-                    },
-                    onSuccess: () => {
-                        showQualificationModal.value = false;
-                    },
-                    onFinish: () => {
-                        submittingQualification.value = false;
-                    },
-                }
-            );
-
-            return;
-        } catch (error) {
-            console.error('Qualification submission error:', error);
-
+        if (!response.ok || !data.success) {
             qualificationError.value =
-                'Unable to verify your answers. Please try again.';
-        } finally {
-            submittingQualification.value = false;
+                data.message || 'Your answers could not be verified.';
+            return;
         }
+
+        // All answers are correct. Add the competition to the cart.
+        router.post(
+            route('cart.add'),
+            {
+                competition_id: props.competition.id,
+                quantity: quantity.value,
+            },
+            {
+                onError: (errors) => {
+                    qualificationError.value =
+                        errors.message || 'Unable to add the competition to your cart.';
+                },
+                onSuccess: () => {
+                    showQualificationModal.value = false;
+                },
+                onFinish: () => {
+                    submittingQualification.value = false;
+                },
+            }
+        );
+
+        return;
+    } catch (error) {
+        console.error('Qualification submission error:', error);
+
+        qualificationError.value =
+            'Unable to verify your answers. Please try again.';
+    } finally {
+        submittingQualification.value = false;
     }
+}
 
 </script>
 

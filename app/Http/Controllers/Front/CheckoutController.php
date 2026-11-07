@@ -212,8 +212,19 @@ class CheckoutController extends Controller
                     ->count();
 
                 if ($availableTickets < $quantity) {
+                    if ($availableTickets === 0) {
+                        throw new \RuntimeException(
+                            "No tickets are currently available for {$competition->title}."
+                        );
+                    }
+
+                    $availabilityMessage = $availableTickets === 1
+                        ? "Only 1 ticket is currently available for {$competition->title}."
+                        : "Only {$availableTickets} tickets are currently available for {$competition->title}.";
+
                     throw new \RuntimeException(
-                        "Not enough tickets are available for {$competition->title}."
+                        $availabilityMessage
+                        . " You requested {$quantity}. Please reduce your quantity."
                     );
                 }
 

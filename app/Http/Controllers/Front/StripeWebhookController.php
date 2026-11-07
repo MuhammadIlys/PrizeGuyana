@@ -186,7 +186,7 @@ class StripeWebhookController extends Controller
                             $item->competition_id
                         )
                         ->where('status', 'available')
-                        ->orderBy('id')
+                        ->inRandomOrder()
                         ->limit($quantity)
                         ->lockForUpdate()
                         ->get();
@@ -194,7 +194,7 @@ class StripeWebhookController extends Controller
                     if ($tickets->count() !== $quantity) {
                         throw new \RuntimeException(
                             'Insufficient available tickets for competition ID '
-                            . $item->competition_id
+                                . $item->competition_id
                         );
                     }
 
@@ -216,6 +216,19 @@ class StripeWebhookController extends Controller
                             'Ticket assignment could not be completed safely.'
                         );
                     }
+                    // Link any Instant Win records to the ticket owner.
+                    DB::table('prize_winning_tickets')
+                        ->where('competition_id', $item->competition_id)
+                        ->whereIn('ticket_id', $ticketIds)
+                        ->where('winning_method', 'instant_win')
+                        ->where('status', 'pending')
+                        ->update([
+                            'winner_user_id' => $order->user_id,
+                            'order_id' => $orderId,
+                            'status' => 'won',
+                            'won_at' => now(),
+                            'updated_at' => now(),
+                        ]);
                 }
 
                 /*
@@ -244,7 +257,6 @@ class StripeWebhookController extends Controller
                         'updated_at' => now(),
                     ]);
             }, 3);
-
         } catch (Throwable $exception) {
             report($exception);
 

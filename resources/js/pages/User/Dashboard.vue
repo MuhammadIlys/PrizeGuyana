@@ -1,4 +1,3 @@
-
 <script setup>
 import { computed } from 'vue'
 import { Head, usePage, Link } from '@inertiajs/vue3'
@@ -19,6 +18,10 @@ const props = defineProps({
             total_tickets: 0,
             active_tickets: 0,
         }),
+    },
+    winningTickets: {
+        type: Array,
+        default: () => [],
     },
 
     recentOrders: {
@@ -158,16 +161,22 @@ function statusClass(status) {
 </script>
 
 <template>
+
     <Head title="My Dashboard" />
 
     <main class="min-h-screen bg-[#0a0a0a] px-4 py-6 text-neutral-100 sm:px-6 sm:py-8 lg:px-8">
         <div class="mx-auto max-w-7xl space-y-7">
 
             <!-- Welcome -->
-            <section class="relative overflow-hidden rounded-2xl border border-neutral-800 bg-[#121212] p-6 shadow-xl sm:p-8">
-                <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-80"></div>
+            <section
+                class="relative overflow-hidden rounded-2xl border border-neutral-800 bg-[#121212] p-6 shadow-xl sm:p-8">
+                <div
+                    class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-80">
+                </div>
 
-                <div class="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-amber-500/[0.06] blur-3xl"></div>
+                <div
+                    class="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-amber-500/[0.06] blur-3xl">
+                </div>
 
                 <div class="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
                     <div class="min-w-0">
@@ -189,8 +198,10 @@ function statusClass(status) {
                         </p>
                     </div>
 
-                    <div class="flex shrink-0 items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-900/70 p-3">
-                        <div class="flex h-11 w-11 items-center justify-center rounded-xl border border-amber-500/20 bg-amber-500/10 text-sm font-black text-amber-400">
+                    <div
+                        class="flex shrink-0 items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-900/70 p-3">
+                        <div
+                            class="flex h-11 w-11 items-center justify-center rounded-xl border border-amber-500/20 bg-amber-500/10 text-sm font-black text-amber-400">
                             {{ initials }}
                         </div>
 
@@ -210,10 +221,8 @@ function statusClass(status) {
             <!-- Account status -->
             <section class="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <article class="flex items-center gap-4 rounded-2xl border border-neutral-800 bg-[#121212] p-5">
-                    <div
-                        class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
-                        :class="emailVerified ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'"
-                    >
+                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+                        :class="emailVerified ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'">
                         <svg v-if="emailVerified" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path d="m5 12 4 4L19 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
@@ -229,7 +238,8 @@ function statusClass(status) {
                             Email verification
                         </p>
 
-                        <p class="mt-1 text-sm font-bold" :class="emailVerified ? 'text-emerald-400' : 'text-amber-400'">
+                        <p class="mt-1 text-sm font-bold"
+                            :class="emailVerified ? 'text-emerald-400' : 'text-amber-400'">
                             {{ emailVerified ? 'Verified' : 'Not verified' }}
                         </p>
 
@@ -240,9 +250,11 @@ function statusClass(status) {
                 </article>
 
                 <article class="flex items-center gap-4 rounded-2xl border border-neutral-800 bg-[#121212] p-5">
-                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-400">
+                    <div
+                        class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-400">
                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path d="M4 5h16v14H4zM4 8l8 5 8-5" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M4 5h16v14H4zM4 8l8 5 8-5" stroke-width="1.7" stroke-linecap="round"
+                                stroke-linejoin="round" />
                         </svg>
                     </div>
 
@@ -275,63 +287,67 @@ function statusClass(status) {
                 </div>
 
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                    <article
-                        v-for="card in statsCards"
-                        :key="card.label"
-                        class="rounded-2xl border border-neutral-800 bg-[#121212] p-5 transition hover:border-neutral-700"
-                    >
+                    <article v-for="card in statsCards" :key="card.label"
+                        class="rounded-2xl border border-neutral-800 bg-[#121212] p-5 transition hover:border-neutral-700">
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0">
                                 <p class="text-xs font-bold uppercase tracking-wider text-neutral-400">
                                     {{ card.label }}
                                 </p>
 
-                                <p
-                                    class="mt-3 break-words text-2xl font-black tracking-tight sm:text-3xl"
-                                    :class="{
-                                        'text-amber-400': card.color === 'amber',
-                                        'text-orange-400': card.color === 'orange',
-                                        'text-emerald-400': card.color === 'emerald',
-                                    }"
-                                >
+                                <p class="mt-3 break-words text-2xl font-black tracking-tight sm:text-3xl" :class="{
+                                    'text-amber-400': card.color === 'amber',
+                                    'text-orange-400': card.color === 'orange',
+                                    'text-emerald-400': card.color === 'emerald',
+                                }">
                                     {{ card.value }}
                                 </p>
                             </div>
 
-                            <div
-                                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
-                                :class="{
-                                    'bg-amber-500/10 text-amber-400': card.color === 'amber',
-                                    'bg-orange-500/10 text-orange-400': card.color === 'orange',
-                                    'bg-emerald-500/10 text-emerald-400': card.color === 'emerald',
-                                }"
-                            >
-                                <svg v-if="card.icon === 'orders'" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path d="M8 5h12v16H4V5h4Zm0 0V3h8v2M8 10h8M8 14h8M8 18h5" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+                            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" :class="{
+                                'bg-amber-500/10 text-amber-400': card.color === 'amber',
+                                'bg-orange-500/10 text-orange-400': card.color === 'orange',
+                                'bg-emerald-500/10 text-emerald-400': card.color === 'emerald',
+                            }">
+                                <svg v-if="card.icon === 'orders'" class="h-5 w-5" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor">
+                                    <path d="M8 5h12v16H4V5h4Zm0 0V3h8v2M8 10h8M8 14h8M8 18h5" stroke-width="1.7"
+                                        stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
 
-                                <svg v-else-if="card.icon === 'clock'" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <svg v-else-if="card.icon === 'clock'" class="h-5 w-5" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor">
                                     <circle cx="12" cy="12" r="9" stroke-width="1.7" />
                                     <path d="M12 7v5l3 2" stroke-width="1.7" stroke-linecap="round" />
                                 </svg>
 
-                                <svg v-else-if="card.icon === 'check'" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path d="m5 12 4 4L19 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                <svg v-else-if="card.icon === 'check'" class="h-5 w-5" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor">
+                                    <path d="m5 12 4 4L19 6" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
                                     <circle cx="12" cy="12" r="10" stroke-width="1.5" />
                                 </svg>
 
-                                <svg v-else-if="card.icon === 'ticket'" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M3 8a2 2 0 0 0 0 4v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4a2 2 0 0 1 0-4V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2Z" />
+                                <svg v-else-if="card.icon === 'ticket'" class="h-5 w-5" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="1.7" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path
+                                        d="M3 8a2 2 0 0 0 0 4v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4a2 2 0 0 1 0-4V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2Z" />
                                     <path d="M13 4v2m0 3v2m0 3v2m0 3v1" />
                                 </svg>
 
-                                <svg v-else-if="card.icon === 'ticket-check'" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M3 8a2 2 0 0 0 0 4v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4a2 2 0 0 1 0-4V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2Z" />
+                                <svg v-else-if="card.icon === 'ticket-check'" class="h-5 w-5" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path
+                                        d="M3 8a2 2 0 0 0 0 4v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4a2 2 0 0 1 0-4V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2Z" />
                                     <path d="m9 12 2 2 4-4" />
                                 </svg>
 
                                 <svg v-else class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path d="M12 2v20m5-15.5C17 5.1 14.8 4 12 4S7 5.1 7 7s2.2 3 5 3 5 1.1 5 3-2.2 3-5 3-5-1.1-5-2.5" stroke-width="1.7" stroke-linecap="round" />
+                                    <path
+                                        d="M12 2v20m5-15.5C17 5.1 14.8 4 12 4S7 5.1 7 7s2.2 3 5 3 5 1.1 5 3-2.2 3-5 3-5-1.1-5-2.5"
+                                        stroke-width="1.7" stroke-linecap="round" />
                                 </svg>
                             </div>
                         </div>
@@ -340,6 +356,53 @@ function statusClass(status) {
                             {{ card.description }}
                         </p>
                     </article>
+                </div>
+            </section>
+
+            <!-- My Winning Tickets -->
+            <section class="overflow-hidden rounded-2xl border border-amber-500/30 bg-[#121212] shadow-xl">
+                <div class="border-b border-neutral-800 p-5 sm:p-6">
+                    <h2 class="text-lg font-bold text-amber-400">
+                        My Winning Tickets
+                    </h2>
+                    <p class="mt-1 text-xs text-neutral-500">
+                        Congratulations! Here are your winning entries and prizes.
+                    </p>
+                </div>
+
+                <div v-if="winningTickets.length" class="divide-y divide-neutral-800">
+                    <article v-for="win in winningTickets" :key="win.id"
+                        class="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h3 class="font-bold text-white">{{ win.prize_name }}</h3>
+                            <p class="mt-1 text-xs text-neutral-400">
+                                {{ win.competition_title }}
+                            </p>
+                            <p class="mt-2 font-mono text-sm font-bold text-amber-400">
+                                {{ win.ticket_number }}
+                            </p>
+                            <p class="mt-1 text-xs capitalize text-neutral-500">
+                                {{ win.winning_method?.replace('_', ' ') }}
+                            </p>
+                        </div>
+
+                        <div class="flex flex-col items-start gap-3 sm:items-end">
+                            <span class="w-fit rounded-full border px-3 py-1 text-xs font-bold capitalize"
+                                :class="statusClass(win.claim_status)">
+                                {{ statusLabel(win.claim_status) }}
+                            </span>
+
+                            <Link :href="route('user.prizes.show', win.id)"
+                                class="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-bold text-black transition hover:bg-amber-400">
+                                Show Prize
+                                <span aria-hidden="true">→</span>
+                            </Link>
+                        </div>
+                    </article>
+                </div>
+
+                <div v-else class="px-6 py-10 text-center text-sm text-neutral-500">
+                    You don't have any winning tickets yet. Good luck!
                 </div>
             </section>
 
@@ -357,10 +420,8 @@ function statusClass(status) {
                             </p>
                         </div>
 
-                        <Link
-                            :href="route('user.entries.index')"
-                            class="inline-flex items-center gap-2 text-xs font-bold text-amber-400 transition hover:text-amber-300"
-                        >
+                        <Link :href="route('user.entries.index')"
+                            class="inline-flex items-center gap-2 text-xs font-bold text-amber-400 transition hover:text-amber-300">
                             View my entries
                             <span aria-hidden="true">→</span>
                         </Link>
@@ -368,21 +429,15 @@ function statusClass(status) {
                 </div>
 
                 <div v-if="upcomingDraws.length" class="divide-y divide-neutral-800/80">
-                    <article
-                        v-for="competition in upcomingDraws"
-                        :key="competition.id"
-                        class="flex flex-col gap-4 p-5 transition hover:bg-white/[0.02] sm:flex-row sm:items-center sm:p-6"
-                    >
-                        <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900">
-                            <img
-                                v-if="competition.main_image"
-                                :src="competition.main_image"
-                                :alt="competition.title"
-                                class="h-full w-full object-cover"
-                                loading="lazy"
-                            />
+                    <article v-for="competition in upcomingDraws" :key="competition.id"
+                        class="flex flex-col gap-4 p-5 transition hover:bg-white/[0.02] sm:flex-row sm:items-center sm:p-6">
+                        <div
+                            class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900">
+                            <img v-if="competition.main_image" :src="competition.main_image" :alt="competition.title"
+                                class="h-full w-full object-cover" loading="lazy" />
 
-                            <svg v-else class="h-7 w-7 text-amber-400/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <svg v-else class="h-7 w-7 text-amber-400/50" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="1.5">
                                 <rect x="3" y="3" width="18" height="18" rx="3" />
                                 <path d="m3 16 5-5 4 4 3-3 6 6" />
                             </svg>
@@ -407,10 +462,8 @@ function statusClass(status) {
                                 {{ competition.entries_count === 1 ? 'entry' : 'entries' }}
                             </span>
 
-                            <Link
-                                :href="route('user.entries.index')"
-                                class="text-xs font-bold text-amber-400 transition hover:text-amber-300"
-                            >
+                            <Link :href="route('user.entries.index')"
+                                class="text-xs font-bold text-amber-400 transition hover:text-amber-300">
                                 View entries →
                             </Link>
                         </div>
@@ -418,7 +471,8 @@ function statusClass(status) {
                 </div>
 
                 <div v-else class="px-6 py-10 text-center">
-                    <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-neutral-800 bg-neutral-900 text-neutral-500">
+                    <div
+                        class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-neutral-800 bg-neutral-900 text-neutral-500">
                         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
                             <circle cx="12" cy="12" r="9" />
                             <path d="M12 7v5l3 2" stroke-linecap="round" />
@@ -463,11 +517,7 @@ function statusClass(status) {
                         </thead>
 
                         <tbody class="divide-y divide-neutral-800/80">
-                            <tr
-                                v-for="order in recentOrders"
-                                :key="order.id"
-                                class="transition hover:bg-white/[0.02]"
-                            >
+                            <tr v-for="order in recentOrders" :key="order.id" class="transition hover:bg-white/[0.02]">
                                 <td class="px-5 py-4 sm:px-6">
                                     <span class="font-mono text-xs font-bold text-amber-400">
                                         {{ order.id || '—' }}
@@ -489,8 +539,7 @@ function statusClass(status) {
                                 <td class="px-5 py-4">
                                     <span
                                         class="inline-flex whitespace-nowrap rounded-full border px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide"
-                                        :class="statusClass(order.status)"
-                                    >
+                                        :class="statusClass(order.status)">
                                         {{ statusLabel(order.status) }}
                                     </span>
                                 </td>
@@ -500,9 +549,11 @@ function statusClass(status) {
                 </div>
 
                 <div v-else class="px-6 py-12 text-center">
-                    <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-neutral-800 bg-neutral-900 text-neutral-500">
+                    <div
+                        class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-neutral-800 bg-neutral-900 text-neutral-500">
                         <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path d="M8 5h12v16H4V5h4Zm0 0V3h8v2M8 10h8M8 14h5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M8 5h12v16H4V5h4Zm0 0V3h8v2M8 10h8M8 14h5" stroke-width="1.6"
+                                stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
                     </div>
 
@@ -522,7 +573,8 @@ function statusClass(status) {
                 </div>
             </section>
 
-            <footer class="flex flex-col gap-2 border-t border-neutral-900 pt-5 text-xs text-neutral-600 sm:flex-row sm:items-center sm:justify-between">
+            <footer
+                class="flex flex-col gap-2 border-t border-neutral-900 pt-5 text-xs text-neutral-600 sm:flex-row sm:items-center sm:justify-between">
                 <p>PrizeGuyana customer dashboard</p>
                 <p>Order totals reflect recorded paid orders.</p>
             </footer>

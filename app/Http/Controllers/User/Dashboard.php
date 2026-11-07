@@ -168,6 +168,57 @@ class Dashboard extends Controller
                 'entries_count' => (int) $competition->entries_count,
             ]);
 
+        // -----------------------------------------
+        // Customer winning tickets
+        // -----------------------------------------
+
+        $winningTickets = DB::table('prize_winning_tickets as winning')
+            ->join(
+                'competition_tickets as tickets',
+                'tickets.id',
+                '=',
+                'winning.ticket_id'
+            )
+            ->join(
+                'competition_prizes as prizes',
+                'prizes.id',
+                '=',
+                'winning.prize_id'
+            )
+            ->join(
+                'my_competitions as competitions',
+                'competitions.id',
+                '=',
+                'winning.competition_id'
+            )
+            ->where('winning.winner_user_id', $userId)
+            ->select(
+                'winning.id',
+                'winning.winning_method',
+                'winning.status as claim_status',
+                'winning.won_at',
+                'winning.claimed_at',
+                'winning.fulfilled_at',
+                'tickets.ticket_number',
+                'prizes.name as prize_name',
+                'prizes.image_path as prize_image',
+                'competitions.title as competition_title'
+            )
+            ->orderByDesc('winning.won_at')
+            ->get()
+            ->map(fn($win) => [
+                'id' => encrypt((string) $win->id),
+                'winning_method' => $win->winning_method,
+                'claim_status' => $win->claim_status,
+                'won_at' => $win->won_at,
+                'claimed_at' => $win->claimed_at,
+                'fulfilled_at' => $win->fulfilled_at,
+                'ticket_number' => $win->ticket_number,
+                'prize_name' => $win->prize_name,
+                'prize_image' => $win->prize_image,
+                'competition_title' => $win->competition_title,
+            ]);
+
         return Inertia::render('User/Dashboard', [
             'stats' => [
                 'total_orders' => $totalOrders,
@@ -179,6 +230,7 @@ class Dashboard extends Controller
             ],
             'recentOrders' => $recentOrders,
             'upcomingDraws' => $upcomingDraws,
+            'winningTickets' => $winningTickets,
         ]);
     }
 }

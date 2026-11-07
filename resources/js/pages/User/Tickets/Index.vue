@@ -88,7 +88,7 @@ const paginationLabel = (label) => String(label)
                     <section class="rounded-2xl border border-amber-500/20 bg-amber-500/[0.04] p-5">
                         <p class="text-sm text-amber-100/50">Tickets matching filters</p>
                         <p class="mt-2 text-3xl font-bold tabular-nums text-amber-300">{{ totalTickets.toLocaleString()
-                        }}</p>
+                            }}</p>
                         <p class="mt-3 text-xs text-amber-100/40">Total records matching your current search and status.
                         </p>
                     </section>
@@ -105,90 +105,62 @@ const paginationLabel = (label) => String(label)
                     </section>
                 </div>
 
-               <section class="rounded-xl border border-amber-500/15 bg-[#0b0b0b] p-4 sm:p-5">
-    <form
-        class="grid grid-cols-1 items-end gap-4 md:grid-cols-[minmax(0,1fr)_200px_auto] xl:grid-cols-[minmax(0,1fr)_220px_auto_auto]"
-        @submit.prevent="applyFilters"
-    >
-        <!-- Search -->
-        <label class="block min-w-0">
-            <span class="mb-2 block text-xs font-semibold tracking-wide text-amber-100/60">
-                Search tickets
-            </span>
+                <section class="rounded-xl border border-amber-500/15 bg-[#0b0b0b] p-4 sm:p-5">
+                    <form
+                        class="grid grid-cols-1 items-end gap-4 md:grid-cols-[minmax(0,1fr)_200px_auto] xl:grid-cols-[minmax(0,1fr)_220px_auto_auto]"
+                        @submit.prevent="applyFilters">
+                        <!-- Search -->
+                        <label class="block min-w-0">
+                            <span class="mb-2 block text-xs font-semibold tracking-wide text-amber-100/60">
+                                Search tickets
+                            </span>
 
-            <div class="relative">
-                <svg
-                    class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-amber-100/35"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                >
-                    <circle cx="11" cy="11" r="7" />
-                    <path stroke-linecap="round" d="m16 16 4 4" />
-                </svg>
+                            <div class="relative">
+                                <svg class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-amber-100/35"
+                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor" stroke-width="1.8">
+                                    <circle cx="11" cy="11" r="7" />
+                                    <path stroke-linecap="round" d="m16 16 4 4" />
+                                </svg>
 
-                <input
-                    v-model="search"
-                    type="search"
-                    name="search"
-                    placeholder="Search by ticket number..."
-                    class="h-11 w-full rounded-lg border border-amber-500/15 bg-black pl-10 pr-3 text-sm text-amber-50 outline-none transition placeholder:text-amber-100/30 hover:border-amber-500/30 focus:border-amber-500/70 focus:ring-2 focus:ring-amber-500/10"
-                />
-            </div>
-        </label>
+                                <input v-model="search" type="search" name="search"
+                                    placeholder="Search by ticket number..."
+                                    class="h-11 w-full rounded-lg border border-amber-500/15 bg-black pl-10 pr-3 text-sm text-amber-50 outline-none transition placeholder:text-amber-100/30 hover:border-amber-500/30 focus:border-amber-500/70 focus:ring-2 focus:ring-amber-500/10" />
+                            </div>
+                        </label>
 
-        <!-- Status -->
-        <label class="block min-w-0">
-            <span class="mb-2 block text-xs font-semibold tracking-wide text-amber-100/60">
-                Ticket status
-            </span>
+                        <!-- Status -->
+                        <label class="block min-w-0">
+                            <span class="mb-2 block text-xs font-semibold tracking-wide text-amber-100/60">
+                                Ticket status
+                            </span>
 
-            <select
-                v-model="status"
-                name="status"
-                class="h-11 w-full rounded-lg border border-amber-500/15 bg-black px-3 text-sm text-amber-50 outline-none transition hover:border-amber-500/30 focus:border-amber-500/70 focus:ring-2 focus:ring-amber-500/10"
-            >
-                <option value="">All tickets</option>
-                <option value="active">Active</option>
-                <option value="used">Used</option>
-                <option value="cancelled">Cancelled</option>
-            </select>
-        </label>
+                            <select v-model="status" name="status"
+                                class="h-11 w-full rounded-lg border border-amber-500/15 bg-black px-3 text-sm text-amber-50 outline-none transition hover:border-amber-500/30 focus:border-amber-500/70 focus:ring-2 focus:ring-amber-500/10">
+                                <option value="">All tickets</option>
+                                <option value="active">Active</option>
+                                <option value="used">Used</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </label>
 
-        <!-- Apply -->
-        <button
-            type="submit"
-            class="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-amber-500 px-5 text-sm font-semibold text-black transition hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
-        >
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-            >
-                <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M4 6h16M7 12h10m-7 6h4"
-                />
-            </svg>
-            Apply
-        </button>
+                        <!-- Apply -->
+                        <button type="submit"
+                            class="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-amber-500 px-5 text-sm font-semibold text-black transition hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M7 12h10m-7 6h4" />
+                            </svg>
+                            Apply
+                        </button>
 
-        <!-- Clear -->
-        <button
-            type="button"
-            @click="clearFilters"
-            class="inline-flex h-11 items-center justify-center rounded-lg border border-amber-500/20 px-5 text-sm font-medium text-amber-100/70 transition hover:border-amber-500/40 hover:bg-amber-500/5 hover:text-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-        >
-            Clear
-        </button>
-    </form>
-</section>
+                        <!-- Clear -->
+                        <button type="button" @click="clearFilters"
+                            class="inline-flex h-11 items-center justify-center rounded-lg border border-amber-500/20 px-5 text-sm font-medium text-amber-100/70 transition hover:border-amber-500/40 hover:bg-amber-500/5 hover:text-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20">
+                            Clear
+                        </button>
+                    </form>
+                </section>
 
                 <section class="overflow-hidden rounded-2xl border border-amber-500/20 bg-black">
                     <div
@@ -210,6 +182,7 @@ const paginationLabel = (label) => String(label)
                                 class="border-b border-amber-500/20 bg-amber-500/5 text-xs uppercase tracking-wider text-amber-100/55">
                                 <tr>
                                     <th class="px-5 py-4 font-semibold">Ticket number</th>
+                                    <th class="px-5 py-4 font-semibold">Prize</th>
                                     <th class="px-5 py-4 font-semibold">Competition</th>
                                     <th class="px-5 py-4 font-semibold">Assigned date</th>
                                     <th class="px-5 py-4 font-semibold">Status</th>
@@ -222,7 +195,27 @@ const paginationLabel = (label) => String(label)
                                     <td class="px-5 py-4">
                                         <span class="font-semibold text-amber-100">{{ ticket.ticket_number || `Ticket
                                             #${ticket.id}`
-                                        }}</span>
+                                            }}</span>
+                                    </td>
+                                    <td class="px-5 py-4">
+                                        <div v-if="ticket.is_winner || ticket.is_instant_winner || ticket.is_draw_winner" class="space-y-2">
+                                            <span
+                                                v-if="ticket.winning_method === 'instant_win' || ticket.is_instant_winner"
+                                                class="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-400">
+                                                Instant Win
+                                            </span>
+                                            <span
+                                                v-else-if="ticket.winning_method === 'draw' || ticket.is_draw_winner"
+                                                class="inline-flex items-center rounded-full border border-sky-500/30 bg-sky-500/10 px-2.5 py-1 text-xs font-semibold text-sky-300">
+                                                Scheduled Draw
+                                            </span>
+
+                                            <p class="font-semibold text-amber-100">
+                                                {{ ticket.prize_name || 'Prize Won' }}
+                                            </p>
+                                        </div>
+
+                                        <span v-else class="text-amber-100/25">—</span>
                                     </td>
                                     <td class="px-5 py-4 text-amber-100/75">
                                         {{ ticket.competition_title || ticket.competition_name || (ticket.competition_id
@@ -241,6 +234,16 @@ const paginationLabel = (label) => String(label)
                                             View order →
                                         </Link>
                                         <span v-else class="text-amber-100/30">—</span>
+
+                                        <Link
+                                            v-if="(ticket.is_winner || ticket.is_instant_winner || ticket.is_draw_winner) && ticket.winning_id"
+                                            :href="route('user.prizes.show', {
+                                                winningTicket: ticket.winning_id
+                                            })"
+                                            class="ms-4 inline-flex items-center rounded-lg bg-amber-500 px-3 py-2 text-xs font-bold text-black transition hover:bg-amber-400"
+                                        >
+                                            Show Prize →
+                                        </Link>
                                     </td>
                                 </tr>
                             </tbody>
@@ -261,7 +264,7 @@ const paginationLabel = (label) => String(label)
                             {{ search || status ? 'No tickets match your filters' : 'No tickets yet' }}
                         </h3>
                         <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-amber-100/45">
-                            {{ search || status ? 'Try another search or clear the selected filters.' : 'When tickets are assigned to your account, they will appear here. You can review your purchases in Orders.' }}
+                            {{ search || status ? 'Try another search or clear the selected filters.' : 'When tickets are assigned to your account, they will appear here.You can review your purchases in Orders.' }}
                         </p>
                         <div class="mt-5 flex flex-wrap justify-center gap-3">
                             <button v-if="search || status" type="button" @click="clearFilters"

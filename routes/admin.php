@@ -42,12 +42,25 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/{competitionId}', 'show')->name('show');
         Route::post('/{competitionId}/generate', 'generate')->name('generate');
-        
+
         Route::post('/{competitionId}/preview-allocation', 'previewAllocation')
             ->name('preview-allocation');
         Route::post('/{competitionId}/allocate-winning-tickets', 'allocateWinningTickets')
             ->name('allocate-winning-tickets');
+        Route::post('/{competitionId}/finish-draw', 'finishDraw')
+            ->name('finish-draw');
     });
+
+    // Prize Claims
+    Route::controller(PrizeClaimController::class)
+        ->prefix('prize-claims')->name('prize-claims.')
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/{id}', 'show')->name('show');
+            Route::post('/{id}/approve', 'approve')->name('approve');
+            Route::post('/{id}/reject', 'reject')->name('reject');
+            Route::post('/{id}/fulfill', 'fulfill')->name('fulfill');
+        });
 
     Route::post(
         '/competitions/{competition}/toggle-status',

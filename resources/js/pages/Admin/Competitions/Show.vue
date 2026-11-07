@@ -1,7 +1,8 @@
 <script setup>
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import { formatDate } from '../../../helpers/date'
-import { Head } from '@inertiajs/vue3'
+import { Head, router } from '@inertiajs/vue3'
+import { computed, ref } from 'vue'
 
 const props = defineProps({
     competition: {
@@ -21,6 +22,39 @@ const props = defineProps({
         default: () => [],
     },
 })
+
+const isFinishingDraw = ref(false)
+
+const canFinishDraw = computed(() =>
+    String(props.competition?.status || '').toLowerCase() === 'active'
+)
+
+const finishDraw = () => {
+    if (!canFinishDraw.value || isFinishingDraw.value) return
+
+    const confirmed = window.confirm(
+        'Are you sure you want to finish this competition? The system will randomly select the scheduled draw winners and close the competition. This action cannot be undone.'
+    )
+
+    if (!confirmed) return
+
+    isFinishingDraw.value = true
+
+    router.post(
+        route('admin.tickets.finish-draw', props.competition.encrypted_id),
+        {},
+        {
+            preserveScroll: true,
+            onError: (errors) => {
+                const message = Object.values(errors).flat()[0]
+                if (message) window.alert(message)
+            },
+            onFinish: () => {
+                isFinishingDraw.value = false
+            },
+        }
+    )
+}
 
 const statusStyles = {
     draft: 'rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-black',
@@ -101,6 +135,16 @@ const yesNoClass = (value) =>
                         class="rounded-xl border border-amber-500/25 px-4 py-2.5 text-sm font-semibold text-amber-100 transition hover:bg-amber-500/10">
                         ← Back to Competitions
                     </a>
+
+                    <button
+                        v-if="canFinishDraw"
+                        type="button"
+                        @click="finishDraw"
+                        :disabled="isFinishingDraw"
+                        class="rounded-xl border border-red-500/30 bg-red-500/10 px-5 py-2.5 text-sm font-bold text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        {{ isFinishingDraw ? 'Finishing Competition...' : 'Finish Competition' }}
+                    </button>
 
                     <a :href="route('admin.competitions.edit', {
                         competition: competition.encrypted_id

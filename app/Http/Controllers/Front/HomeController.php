@@ -31,7 +31,7 @@ class HomeController extends Controller
                 'title' => 'Official Partner',
                 'subtitle' => 'UFC & ZUFFA BOXING',
                 'description' => "There's a reason why we are considered the best in the business...and we work with the best in the business.",
-                'image' => '/images/featured/comp-1.jpg',
+                'image' => '/images/latest-news/comp-1.jpg',
             ],
             [
                 'id' => 2,
@@ -40,7 +40,7 @@ class HomeController extends Controller
                 'title' => 'Brand New House Winner!',
                 'subtitle' => 'Mary Jo Mccourt',
                 'description' => 'Huge Congratulations to Mary who was our latest house winner, £20k cash and a Range Rover Sport',
-                'image' => '/images/featured/comp-2.jpg',
+                'image' => '/images/latest-news/comp-2.jpg',
             ],
             [
                 'id' => 3,
@@ -49,7 +49,7 @@ class HomeController extends Controller
                 'title' => 'Official Partner',
                 'subtitle' => 'UFC & ZUFFA BOXING',
                 'description' => "There's a reason why we are considered the best in the business...and we work with the best in the business.",
-                'image' => '/images/featured/comp-1.jpg',
+                'image' => '/images/latest-news/comp-1.jpg',
             ],
         ];
 

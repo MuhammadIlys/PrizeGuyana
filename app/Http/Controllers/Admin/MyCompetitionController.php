@@ -12,6 +12,7 @@ use App\Models\CompetitionTermsVersion;
 use App\Models\QualificationQuestion;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -77,12 +78,16 @@ class MyCompetitionController extends Controller
         $data['main_image'] = $request->file('main_image')
             ->store('competitions/images', 'public');
 
+        // Store video permanently
         $data['video_path'] = $request->hasFile('video_path')
             ? $request->file('video_path')->store('competitions/videos', 'public')
             : null;
 
         // Ensure it defaults to an empty array if nothing was selected
         $data['qualification_question_ids'] = $data['qualification_question_ids'] ?? [];
+
+        $data['instant_win_enabled'] = $request->boolean('instant_win_enabled') ? 1 : 0;
+        $data['qualification_enabled'] = $request->boolean('qualification_enabled') ? 1 : 0;
 
         $countryCodes = $data['country_codes'] ?? [];
         unset($data['country_codes']);
@@ -153,6 +158,7 @@ class MyCompetitionController extends Controller
 
         $competition = CompetitionsModel::findOrFail($id);
 
+
         // Add encrypted ID for the Vue update route
         $competition->encrypted_id = Crypt::encryptString(
             (string) $competition->id
@@ -165,6 +171,18 @@ class MyCompetitionController extends Controller
             ->where('competition_id', $competition->id)
             ->pluck('country_code')
             ->toArray();
+
+        $competition->starts_at_local = $competition->starts_at
+            ? Carbon::parse($competition->starts_at)->timezone('America/Guyana')->format('Y-m-d\TH:i')
+            : '';
+
+        $competition->ends_at_local = $competition->ends_at
+            ? Carbon::parse($competition->ends_at)->timezone('America/Guyana')->format('Y-m-d\TH:i')
+            : '';
+
+        $competition->draw_at_local = $competition->draw_at
+            ? Carbon::parse($competition->draw_at)->timezone('America/Guyana')->format('Y-m-d\TH:i')
+            : '';
 
         return Inertia::render('Admin/Competitions/Edit', [
             'competition' => $competition,

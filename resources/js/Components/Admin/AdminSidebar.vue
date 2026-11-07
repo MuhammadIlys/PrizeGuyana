@@ -312,7 +312,7 @@ const childClass = (path, exclude = []) => [
                         </div>
                     </div>
 
-                     <Link :href="route('admin.tickets.index')" @click="navigate" title="Tickets"
+                    <Link :href="route('admin.tickets.index')" @click="navigate" title="Tickets"
                         :class="navClass('/admin/tickets')">
                         <svg :class="['h-4 w-4 shrink-0', !isCollapsed ? 'mr-3' : '']" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
@@ -321,7 +321,21 @@ const childClass = (path, exclude = []) => [
                         </svg>
                         <span v-if="!isCollapsed">Tickets</span>
                     </Link>
-                    
+
+                    <!-- Prize Claims -->
+                    <Link :href="route('admin.prize-claims.index')" @click="navigate" title="Prize Claims"
+                        :class="navClass('/admin/prize-claims')">
+                        <svg :class="['h-4 w-4 shrink-0', !isCollapsed ? 'mr-3' : '']" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4m5-1a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+
+                        <span v-if="!isCollapsed">Prize Claims</span>
+                    </Link>
+
+
+
                 </div>
 
                 <!-- SALES & TRANSACTIONS -->
@@ -351,7 +365,7 @@ const childClass = (path, exclude = []) => [
                         <span v-if="!isCollapsed">Entries</span>
                     </Link>
 
-                   
+
                 </div>
 
                 <!-- CUSTOMERS -->
