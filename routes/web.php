@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\Front\PrivacyPolicyController;
 use App\Http\Controllers\Front\StripeWebhookController;
 use App\Http\Controllers\Front\TermisandconditionsController;
 use Illuminate\Support\Facades\Route;
+
 
 
 /*
@@ -84,6 +86,14 @@ Route::middleware('guest')->group(function () {
     // Registration
     Route::get('/register', [RegisterController::class, 'index'])->name('register');
     Route::post('/register', [RegisterController::class, 'store'])->name('user.register');
+
+    // Email Verification
+    Route::controller(EmailVerificationController::class)->group(function () {
+        Route::get('/email/verify', 'show')->name('email.verify');
+        Route::post('/email/verify', 'verify')->name('email.verify.submit');
+        Route::post('/email/verify/resend', 'resend')->name('email.verify.resend');
+    });
+
 
     // Authentication
     Route::get('/login', [LoginController::class, 'index'])->name('login');

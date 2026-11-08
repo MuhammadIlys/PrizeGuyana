@@ -15,6 +15,7 @@ class Dashboard extends Controller
     {
         $userId = Auth::id();
 
+
         // -----------------------------------------
         // Order statistics
         // -----------------------------------------
@@ -231,6 +232,10 @@ class Dashboard extends Controller
             'recentOrders' => $recentOrders,
             'upcomingDraws' => $upcomingDraws,
             'winningTickets' => $winningTickets,
+            'user' => [
+                'email_verified_at' => Auth::user()->email_verified_at,
+            ],
+
         ]);
     }
 }

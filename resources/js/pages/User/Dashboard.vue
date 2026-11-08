@@ -19,6 +19,12 @@ const props = defineProps({
             active_tickets: 0,
         }),
     },
+    user: {
+        type: Object,
+        default: () => ({
+            email_verified_at: null,
+        }),
+    },
     winningTickets: {
         type: Array,
         default: () => [],
@@ -56,7 +62,9 @@ const initials = computed(() => {
         .join('') || 'C'
 })
 
-const emailVerified = computed(() => Boolean(user.value.email_verified_at))
+const emailVerified = computed(() =>
+    Boolean(props.user?.email_verified_at)
+);
 
 const totalOrders = computed(() => Number(props.stats?.total_orders ?? 0))
 const pendingOrders = computed(() => Number(props.stats?.pending_orders ?? 0))
