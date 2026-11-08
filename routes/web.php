@@ -16,6 +16,7 @@ use App\Http\Controllers\Front\NewsLetterSubscribeController;
 use App\Http\Controllers\Front\PrivacyPolicyController;
 use App\Http\Controllers\Front\StripeWebhookController;
 use App\Http\Controllers\Front\TermisandconditionsController;
+use App\Http\Controllers\User\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -106,6 +107,12 @@ Route::middleware('guest')->group(function () {
     // Required by Laravel Mailer for email links
     Route::get('/reset-password/{token}', [ResetPasswordController::class, 'create'])->name('password.reset');
     Route::post('/reset-password', [ResetPasswordController::class, 'store'])->name('password.update');
+});
+
+Route::middleware('auth')->prefix('notifications')->name('notifications.')->controller(NotificationController::class)->group(function () {
+    Route::get('/', 'index')->name('index');
+    Route::patch('/{id}/read', 'markAsRead')->name('read');
+    Route::patch('/read-all', 'markAllAsRead')->name('read-all');
 });
 
 /*

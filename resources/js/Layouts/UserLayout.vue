@@ -1,4 +1,3 @@
-
 <script setup>
 import { ref, watch } from 'vue'
 import { usePage } from '@inertiajs/vue3'
@@ -7,6 +6,7 @@ import Footer from '@/Components/Front/Footer.vue'
 import ToastContainer from '@/Components/Toasts/ToastContainer.vue'
 import UserSidebar from '@/Components/User/UserSidebar.vue'
 import { useToast } from '@/Composables/useToast'
+import NotificationBell from '@/Components/User/NotificationBell.vue'
 
 const page = usePage()
 
@@ -44,16 +44,14 @@ defineProps({
 
 <template>
     <div class="relative flex min-h-screen bg-[#0a0a0a] text-neutral-100">
-        <UserSidebar
-            :is-collapsed="isSidebarCollapsed"
-            @toggle-collapse="isSidebarCollapsed = !isSidebarCollapsed"
-        />
+        <UserSidebar :is-collapsed="isSidebarCollapsed" @toggle-collapse="isSidebarCollapsed = !isSidebarCollapsed" />
 
         <!-- Main Page Content Area -->
-        <div
-            class="min-w-0 flex-1 transition-[padding] duration-300"
-            :class="isSidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'"
-        >
+        <div class="min-w-0 flex-1 transition-[padding] duration-300"
+            :class="isSidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'">
+            <div class="flex justify-end px-4 pt-4 sm:px-6 lg:px-8">
+                <NotificationBell />
+            </div>
             <main class="p-4 sm:p-6 lg:p-8">
                 <slot />
             </main>

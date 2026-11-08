@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
+use App\Models\User;
+use App\Services\NotificationService;
+
 class CompetitionTicketController extends Controller
 {
     public function index()
@@ -652,11 +655,19 @@ class CompetitionTicketController extends Controller
     /**
      * Execute and permanently save the scheduled competition draw.
      */
+
+
     public function finishDraw($competitionId)
     {
         $competitionId = $this->decryptId($competitionId);
 
-        $result = DB::transaction(function () use ($competitionId) {
+        // Collect winner details for notifications after transaction.
+        $drawWinners = [];
+
+        $result = DB::transaction(function () use (
+            $competitionId,
+            &$drawWinners
+        ) {
 
             $competition = DB::table('my_competitions')
                 ->where('id', $competitionId)
@@ -752,6 +763,7 @@ class CompetitionTicketController extends Controller
                     't.id',
                     't.user_id',
                     't.order_id',
+                    't.ticket_number',
                 ]);
 
             if ($selectedTickets->count() !== $requiredWinners) {
@@ -793,11 +805,46 @@ class CompetitionTicketController extends Controller
                         'created_at' => $now,
                         'updated_at' => $now,
                     ];
+
+                    // Collect details for customer notifications.
+                    $drawWinners[] = [
+                        'user_id' => $ticket->user_id,
+                        'ticket_id' => $ticket->id,
+                        'prize_name' => $prize->name,
+                        'ticket_number' => $ticket->ticket_number,
+                    ];
                 }
             }
 
             // Save all scheduled draw winners.
             DB::table('prize_winning_tickets')->insert($allocationRows);
+
+            /*
+         * Retrieve the newly created winning record IDs
+         * for exact customer prize navigation.
+         */
+            $winningRecords = DB::table('prize_winning_tickets')
+                ->where('competition_id', $competitionId)
+                ->where('winning_method', 'draw')
+                ->whereIn(
+                    'ticket_id',
+                    $selectedTickets->pluck('id')->all()
+                )
+                ->get([
+                    'id',
+                    'ticket_id',
+                ])
+                ->keyBy('ticket_id');
+
+            foreach ($drawWinners as &$winner) {
+                $winningRecord = $winningRecords->get($winner['ticket_id']);
+
+                $winner['winning_id'] = $winningRecord
+                    ? $winningRecord->id
+                    : null;
+            }
+
+            unset($winner);
 
             // Complete the competition at the moment of execution.
             DB::table('my_competitions')
@@ -811,14 +858,67 @@ class CompetitionTicketController extends Controller
             return [
                 'success' => true,
                 'message' => count($allocationRows) . ' scheduled draw winners selected successfully.',
+                'competition_title' => $competition->title,
+                'total_winners' => count($allocationRows),
             ];
         }, 3);
+
+        /*
+     * Send notifications only after successful transaction commit.
+     */
+        if ($result['success']) {
+            try {
+                $notificationService = app(NotificationService::class);
+
+                // Notify each winning customer.
+                foreach ($drawWinners as $winner) {
+
+                    $user = User::find($winner['user_id']);
+
+                    if (!$user) {
+                        continue;
+                    }
+
+                    $winningTicketUrl = $winner['winning_id']
+                        ? route('user.prizes.show', [
+                            'winningTicket' => Crypt::encryptString(
+                                (string) $winner['winning_id']
+                            ),
+                        ])
+                        : route('user.dashboard');
+
+                    $notificationService->send(
+                        $user,
+                        'Congratulations! You Won!',
+                        "You have won {$winner['prize_name']} in the Scheduled Draw! Your winning ticket number is {$winner['ticket_number']}. Click to view your prize.",
+                        $winningTicketUrl,
+                        'scheduled_draw'
+                    );
+                }
+
+                // Notify administrators once about the completed draw.
+                $notificationService->notifyAdmins(
+                    'Scheduled Draw Completed',
+                    "{$result['total_winners']} winners have been selected for {$result['competition_title']}.",
+                    route('admin.tickets.show', [
+                        'competitionId' => Crypt::encryptString((string) $competitionId),
+                        // 'competitionId' => $competitionId,
+                    ]),
+                    'scheduled_draw'
+                );
+            } catch (\Throwable $exception) {
+                // Notification failure must not affect the completed draw.
+                report($exception);
+            }
+        }
 
         return back()->with(
             $result['success'] ? 'success' : 'error',
             $result['message']
         );
     }
+
+
 
     /**
      * Generate competition tickets.

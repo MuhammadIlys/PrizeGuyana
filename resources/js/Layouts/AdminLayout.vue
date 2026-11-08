@@ -1,45 +1,40 @@
 <script setup>
-import { ref, watch } from 'vue';
-import { usePage } from '@inertiajs/vue3';
-import { useToast } from '@/Composables/useToast';
+import { ref, watch } from 'vue'
+import { usePage } from '@inertiajs/vue3'
+import { useToast } from '@/Composables/useToast'
 
-import AdminSidebar from '@/Components/Admin/AdminSidebar.vue';
-import ToastContainer from '@/Components/Toasts/ToastContainer.vue';
+import AdminSidebar from '@/Components/Admin/AdminSidebar.vue'
+import AdminNotificationBell from '@/Components/Admin/AdminNotificationBell.vue'
+import ToastContainer from '@/Components/Toasts/ToastContainer.vue'
 
-const page = usePage();
+const page = usePage()
 
-const {
-    success,
-    error,
-} = useToast();
+const { success, error } = useToast()
 
 watch(
     () => page.props.flash?.success,
     (message) => {
-        if (message) {
-            success(message);
-        }
+        if (message) success(message)
     },
     { immediate: true }
-);
+)
 
 watch(
     () => page.props.flash?.error,
     (message) => {
-        if (message) {
-            error(message);
-        }
+        if (message) error(message)
     },
     { immediate: true }
-);
+)
 
-const isSidebarOpen = ref(false);
-const isSidebarCollapsed = ref(false);
+const isSidebarOpen = ref(false)
+const isSidebarCollapsed = ref(false)
 </script>
 
 <template>
     <div class="min-h-screen bg-[#0d0d0d] text-white">
 
+        <!-- Mobile Sidebar Toggle -->
         <button type="button" @click="isSidebarOpen = true" aria-label="Open admin navigation"
             :aria-expanded="isSidebarOpen" aria-controls="admin-sidebar"
             class="fixed left-4 top-4 z-40 rounded-lg border border-neutral-800 bg-[#121212] p-2.5 text-neutral-300 shadow-lg transition-colors hover:bg-neutral-800 hover:text-white lg:hidden">
@@ -55,12 +50,18 @@ const isSidebarCollapsed = ref(false);
         <!-- Dashboard Content -->
         <main class="min-h-screen transition-[margin] duration-200"
             :class="isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'">
-            <div class="p-6 pt-20 lg:p-8 lg:pt-8">
+            <div class="p-4 pt-20 sm:p-6 lg:p-8 lg:pt-8">
+
+                <!-- Top Navigation -->
+                <div class="mb-6 flex items-center justify-end">
+                    <AdminNotificationBell />
+                </div>
+
+                <!-- Page Content -->
                 <slot />
             </div>
         </main>
 
+        <ToastContainer />
     </div>
-    <ToastContainer />
-
 </template>

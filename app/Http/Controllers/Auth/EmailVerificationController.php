@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\EmailVerification;
 use App\Models\User;
 use App\Notifications\VerifyEmailOtp;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -126,6 +127,25 @@ class EmailVerificationController extends Controller
         Auth::login($user);
 
         $request->session()->regenerate();
+
+        $notificationService = app(NotificationService::class);
+
+        // Notify the newly registered customer
+        $notificationService->send(
+            $user,
+            'Welcome to PrizeGuyana!',
+            'Your account has been successfully created and your email is verified.',
+            route('user.dashboard'),
+            'registration'
+        );
+
+        // Notify administrators
+        $notificationService->notifyAdmins(
+            'New Customer Registered',
+            $user->first_name . ' ' . $user->last_name . ' has successfully registered.',
+            route('admin.customers.index'),
+            'registration'
+        );
 
         return redirect()->route('user.dashboard');
     }

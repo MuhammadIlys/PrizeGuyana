@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -165,6 +166,7 @@ class TicketsController extends Controller
         ]);
     }
 
+
     public function submitPrizeClaim(string $winningTicket)
     {
         try {
@@ -217,6 +219,55 @@ class TicketsController extends Controller
                 'error',
                 'This prize cannot be claimed again or is no longer available for claiming.'
             );
+        }
+
+        /*
+     * Notify administrators after successful claim submission.
+     */
+        try {
+            $claimDetails = DB::table('prize_winning_tickets as winning')
+                ->join(
+                    'competition_tickets as tickets',
+                    'tickets.id',
+                    '=',
+                    'winning.ticket_id'
+                )
+                ->join(
+                    'competition_prizes as prizes',
+                    'prizes.id',
+                    '=',
+                    'winning.prize_id'
+                )
+                ->join(
+                    'my_competitions as competitions',
+                    'competitions.id',
+                    '=',
+                    'winning.competition_id'
+                )
+                ->where('winning.id', $winningTicketId)
+                ->where('tickets.user_id', $userId)
+                ->select(
+                    'prizes.name as prize_name',
+                    'tickets.ticket_number',
+                    'competitions.title as competition_title'
+                )
+                ->first();
+
+            if ($claimDetails) {
+                $customer = Auth::user();
+
+                app(NotificationService::class)->notifyAdmins(
+                    'New Prize Claim Submitted',
+                    "{$customer->first_name} {$customer->last_name} has submitted a claim for {$claimDetails->prize_name} (Ticket #{$claimDetails->ticket_number}) in {$claimDetails->competition_title}. Please review the claim.",
+                    route('admin.prize-claims.show', [
+                        'id' => encrypt((string) $winningTicketId),
+                    ]),
+                    'prize_claim'
+                );
+            }
+        } catch (\Throwable $exception) {
+            // Notification failure must not affect the submitted claim.
+            report($exception);
         }
 
         return redirect()

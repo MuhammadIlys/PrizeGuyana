@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
+use App\Models\User;
+use App\Services\NotificationService;
+
 class PrizeClaimController extends Controller
 {
     /**
@@ -275,6 +278,13 @@ class PrizeClaimController extends Controller
                 ]);
         });
 
+        $this->notifyClaimCustomer(
+            (int) $claimId,
+            'Prize Claim Approved',
+            'Your prize claim has been approved. Our team will proceed with prize fulfilment.',
+            'claim_approved'
+        );
+
         return redirect()
             ->back()
             ->with('success', 'Prize claim approved successfully.');
@@ -299,7 +309,9 @@ class PrizeClaimController extends Controller
             abort(404);
         }
 
-        DB::transaction(function () use ($claimId, $validated) {
+        $reason = trim($validated['reason']);
+
+        DB::transaction(function () use ($claimId, $reason) {
             $claim = DB::table('prize_winning_tickets')
                 ->where('id', $claimId)
                 ->whereIn('winning_method', ['instant_win', 'draw'])
@@ -318,10 +330,17 @@ class PrizeClaimController extends Controller
                 ->where('id', $claimId)
                 ->update([
                     'status' => 'cancelled',
-                    'rejection_reason' => trim($validated['reason']),
+                    'rejection_reason' => $reason,
                     'updated_at' => now(),
                 ]);
         });
+
+        $this->notifyClaimCustomer(
+            (int) $claimId,
+            'Prize Claim Rejected',
+            'Unfortunately, your prize claim has been rejected. Reason: ' . $reason,
+            'claim_rejected'
+        );
 
         return redirect()
             ->back()
@@ -363,8 +382,58 @@ class PrizeClaimController extends Controller
                 ]);
         });
 
+        $this->notifyClaimCustomer(
+            (int) $claimId,
+            'Prize Fulfilled!',
+            'Your prize has been successfully fulfilled. Thank you for participating in PrizeGuyana!',
+            'prize_fulfilled'
+        );
+
         return redirect()
             ->back()
             ->with('success', 'Prize marked as fulfilled successfully.');
+    }
+
+    private function notifyClaimCustomer(
+        int $claimId,
+        string $title,
+        string $message,
+        string $type
+    ): void {
+        try {
+            $claim = DB::table('prize_winning_tickets as pwt')
+                ->join('competition_prizes as p', 'p.id', '=', 'pwt.prize_id')
+                ->join('competition_tickets as t', 't.id', '=', 'pwt.ticket_id')
+                ->where('pwt.id', $claimId)
+                ->select(
+                    'pwt.winner_user_id',
+                    'p.name as prize_name',
+                    't.ticket_number'
+                )
+                ->first();
+
+            if (!$claim || !$claim->winner_user_id) {
+                return;
+            }
+
+            $customer = User::find($claim->winner_user_id);
+
+            if (!$customer) {
+                return;
+            }
+
+            app(NotificationService::class)->send(
+                $customer,
+                $title,
+                $message . " Prize: {$claim->prize_name}. Ticket: #{$claim->ticket_number}.",
+                route('user.prizes.show', [
+                    'winningTicket' => Crypt::encryptString((string) $claimId),
+                ]),
+                $type
+            );
+        } catch (\Throwable $exception) {
+            // Notification failure must not affect the admin action.
+            report($exception);
+        }
     }
 }

@@ -1,3 +1,4 @@
+
 <?php
 
 namespace App\Http\Controllers\Front;
@@ -5,8 +6,11 @@ namespace App\Http\Controllers\Front;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Crypt;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\Webhook;
+use App\Models\User;
+use App\Services\NotificationService;
 use UnexpectedValueException;
 use Throwable;
 
@@ -67,11 +71,17 @@ class StripeWebhookController extends Controller
             return response('Missing payment metadata.', 400);
         }
 
+        // Notification flags and collected Instant Win winners.
+        $shouldNotify = false;
+        $instantWinWinners = [];
+
         try {
             DB::transaction(function () use (
                 $session,
                 $orderId,
-                $paymentId
+                $paymentId,
+                &$shouldNotify,
+                &$instantWinWinners
             ) {
                 /*
                  * Lock the order and payment to prevent concurrent
@@ -107,8 +117,6 @@ class StripeWebhookController extends Controller
 
                 /*
                  * Verify the amount and currency.
-                 * Stripe returns currency in lowercase, while our
-                 * database may store it in uppercase.
                  */
                 $expectedAmount = (int) round(
                     (float) $order->total * 100
@@ -168,8 +176,6 @@ class StripeWebhookController extends Controller
 
                 /*
                  * Assign existing, pre-generated tickets.
-                 * If any item cannot be fulfilled, the entire
-                 * transaction rolls back.
                  */
                 foreach ($items as $item) {
                     $quantity = (int) $item->quantity;
@@ -194,7 +200,7 @@ class StripeWebhookController extends Controller
                     if ($tickets->count() !== $quantity) {
                         throw new \RuntimeException(
                             'Insufficient available tickets for competition ID '
-                            . $item->competition_id
+                                . $item->competition_id
                         );
                     }
 
@@ -215,6 +221,71 @@ class StripeWebhookController extends Controller
                         throw new \RuntimeException(
                             'Ticket assignment could not be completed safely.'
                         );
+                    }
+
+                    /*
+                     * Find pending Instant Win records belonging
+                     * to the tickets purchased in this order.
+                     */
+                    $winningRecords = DB::table('prize_winning_tickets as pwt')
+                        ->join(
+                            'competition_prizes as cp',
+                            'cp.id',
+                            '=',
+                            'pwt.prize_id'
+                        )
+                        ->join(
+                            'competition_tickets as ct',
+                            'ct.id',
+                            '=',
+                            'pwt.ticket_id'
+                        )
+                        ->where('pwt.competition_id', $item->competition_id)
+                        ->whereIn('pwt.ticket_id', $ticketIds)
+                        ->where('pwt.winning_method', 'instant_win')
+                        ->where('pwt.status', 'pending')
+                        ->select([
+                            'pwt.id',
+                            'cp.name as prize_name',
+                            'ct.ticket_number',
+                        ])
+                        ->lockForUpdate()
+                        ->get();
+
+                    if ($winningRecords->isNotEmpty()) {
+                        $winningIds = $winningRecords->pluck('id')->all();
+
+                        /*
+                         * Mark matching Instant Win records as won.
+                         */
+                        $winningUpdated = DB::table('prize_winning_tickets')
+                            ->whereIn('id', $winningIds)
+                            ->where('status', 'pending')
+                            ->update([
+                                'winner_user_id' => $order->user_id,
+                                'order_id' => $orderId,
+                                'status' => 'won',
+                                'won_at' => now(),
+                                'updated_at' => now(),
+                            ]);
+
+                        if ($winningUpdated !== count($winningIds)) {
+                            throw new \RuntimeException(
+                                'Instant Win records could not be updated safely.'
+                            );
+                        }
+
+                        /*
+                         * Collect winning details for notifications
+                         * after the transaction commits.
+                         */
+                        foreach ($winningRecords as $winner) {
+                            $instantWinWinners[] = [
+                                'winning_id' => $winner->id,
+                                'prize_name' => $winner->prize_name,
+                                'ticket_number' => $winner->ticket_number,
+                            ];
+                        }
                     }
                 }
 
@@ -243,8 +314,10 @@ class StripeWebhookController extends Controller
                         'paid_at' => now(),
                         'updated_at' => now(),
                     ]);
-            }, 3);
 
+                // Notify only after successful processing.
+                $shouldNotify = true;
+            }, 3);
         } catch (Throwable $exception) {
             report($exception);
 
@@ -253,6 +326,100 @@ class StripeWebhookController extends Controller
              * Do not mark the order paid if ticket assignment fails.
              */
             return response('Payment processing failed.', 500);
+        }
+
+        /*
+         * Send notifications only after the transaction commits.
+         */
+        if ($shouldNotify) {
+            try {
+                $user = User::find(
+                    DB::table('orders')
+                        ->where('id', $orderId)
+                        ->value('user_id')
+                );
+
+                if ($user) {
+                    $notificationService = app(NotificationService::class);
+
+                    /*
+                     * Customer: Payment successful.
+                     * Destination: Exact order details.
+                     */
+                    $notificationService->send(
+                        $user,
+                        'Payment Successful',
+                        "Your payment for order #{$orderId} has been received successfully.",
+                        route('user.orders.show', [
+                            'order' => $orderId,
+                        ]),
+                        'payment'
+                    );
+
+                    /*
+                     * Customer: Tickets assigned.
+                     * Destination: My Tickets.
+                     */
+                    $notificationService->send(
+                        $user,
+                        'Tickets Assigned',
+                        "Your tickets for order #{$orderId} have been assigned. You can now view them in My Tickets.",
+                        route('user.tickets.index'),
+                        'ticket_assignment'
+                    );
+
+                    /*
+                     * Admin: New paid order.
+                     */
+                    $notificationService->notifyAdmins(
+                        'New Paid Order',
+                        "Order #{$orderId} has been paid successfully and tickets have been assigned.",
+                        null,
+                        'payment'
+                    );
+
+                    /*
+                     * Instant Win notifications.
+                     */
+                    foreach ($instantWinWinners as $winner) {
+                        $prizeName = $winner['prize_name'];
+                        $ticketNumber = $winner['ticket_number'];
+
+                        $winningTicketUrl = route('user.prizes.show', [
+                            'winningTicket' => Crypt::encryptString(
+                                (string) $winner['winning_id']
+                            ),
+                        ]);
+
+                        /*
+                         * Customer: Instant Win prize awarded.
+                         * Destination: Exact winning prize details.
+                         */
+                        $notificationService->send(
+                            $user,
+                            'Congratulations! You Won!',
+                            "Your ticket #{$ticketNumber} has won an Instant Win prize: {$prizeName}. Click to view your prize and submit your claim.",
+                            $winningTicketUrl,
+                            'instant_win'
+                        );
+
+                        /*
+                         * Admin: Instant Win prize awarded.
+                         */
+                        $notificationService->notifyAdmins(
+                            'Instant Win Prize Awarded',
+                            "Customer {$user->first_name} {$user->last_name} won {$prizeName} with ticket #{$ticketNumber} in order #{$orderId}.",
+                            route('admin.orders.show', [
+                                'order' => $orderId,
+                            ]),
+                            'instant_win'
+                        );
+                    }
+                }
+            } catch (Throwable $exception) {
+                // Notification failure must not affect successful payment processing.
+                report($exception);
+            }
         }
 
         return response('Webhook processed successfully.', 200);
