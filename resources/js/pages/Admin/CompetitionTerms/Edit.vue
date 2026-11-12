@@ -11,7 +11,7 @@ const props = defineProps({
 })
 
 const form = useForm({
-    version: props.term.version ?? '',
+    // version: props.term.version ?? '',
     title: props.term.title ?? '',
     content: props.term.content ?? '',
     is_active: Boolean(props.term.is_active),
@@ -117,7 +117,7 @@ const submit = () => {
                     <div class="grid gap-5 p-5 sm:grid-cols-2">
 
                         <!-- Version -->
-                        <div>
+                        <!-- <div>
                             <label
                                 for="version"
                                 class="mb-2 block text-xs font-semibold text-neutral-300"
@@ -153,7 +153,7 @@ const submit = () => {
                             >
                                 Use a version such as v1.0 or v1.1.
                             </p>
-                        </div>
+                        </div> -->
 
                         <!-- Title -->
                         <div>

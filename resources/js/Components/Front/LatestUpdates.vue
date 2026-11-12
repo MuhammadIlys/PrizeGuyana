@@ -1,6 +1,6 @@
 <script setup>
 defineProps({
-    updates: {
+    latestWinners: {
         type: Array,
         default: () => [],
     },
@@ -8,76 +8,97 @@ defineProps({
 </script>
 
 <template>
-    <section class="w-full max-w-7xl mx-auto px-4 py-12 text-white">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    
+<section class="w-full max-w-7xl mx-auto px-4 py-12 text-white">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-            <!-- Left Column: Title & Subtitle -->
-            <div class="lg:col-span-5 pt-4">
-                <h2 class="text-3xl sm:text-4xl font-extrabold text-amber-500 tracking-tight">
-                    What we've been up to
-                </h2>
-                <p class="mt-3 text-neutral-400 text-sm sm:text-base font-medium">
-                    Latest news, winners, and updates from the team
-                </p>
-            </div>
+        <!-- Left Column -->
+        <div class="lg:col-span-5 pt-4">
+            <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-500">
+                Celebrating Our Winners
+            </span>
 
-            <!-- Right Column: Scrollable Feed Container -->
-            <div class="lg:col-span-7">
-                <div class="bg-[#0f0e0d] border border-amber-900/30 rounded-2xl p-4 sm:p-5 shadow-2xl">
+            <h2 class="mt-3 text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                Latest Winners
+            </h2>
 
-                    <!-- Scrollable Feed Wrapper -->
-                    <div class="max-h-[500px] overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+            <p class="mt-3 text-neutral-400 text-sm sm:text-base font-medium leading-relaxed">
+                Real winners. Amazing prizes. Your chance to be next.
+            </p>
 
-                        <div v-for="(item, index) in updates" :key="`${item.id}-${index}`"
-                            class="bg-[#141414] border border-neutral-800/80 rounded-xl p-4 sm:p-5 transition hover:border-neutral-700 flex flex-col sm:flex-row gap-4 sm:gap-6 items-stretch">
-                            <!-- Thumbnail Image -->
-                            <div
-                                class="w-full sm:w-36 h-36 flex-shrink-0 rounded-lg overflow-hidden bg-neutral-900 border border-neutral-800">
-                                <img :src="item.image" :alt="item.title"
-                                    class="w-full h-full object-cover object-center" />
+            <a href="/winners"
+                class="inline-flex items-center gap-2 mt-6 text-sm font-bold text-amber-400 hover:text-amber-300 transition">
+                View All Winners
+                <span>→</span>
+            </a>
+        </div>
+
+        <!-- Right Column -->
+        <div class="lg:col-span-7">
+            <div class="bg-[#0f0e0d] border border-amber-900/30 rounded-2xl p-4 sm:p-5 shadow-2xl">
+
+                <div class="max-h-[500px] overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+
+                    <!-- Winner Card -->
+                    <div v-for="winner in latestWinners" :key="winner.id"
+                        class="bg-[#141414] border border-neutral-800/80 rounded-xl p-4 sm:p-5 flex items-center gap-4 transition hover:border-amber-500/30">
+
+                        <!-- Initials Avatar -->
+                        <div
+                            class="h-14 w-14 sm:h-16 sm:w-16 shrink-0 rounded-full bg-gradient-to-br from-amber-400/20 to-amber-700/10 border border-amber-500/30 flex items-center justify-center">
+
+                            <span class="text-lg sm:text-xl font-extrabold text-amber-400">
+                                {{ winner.initials }}
+                            </span>
+                        </div>
+
+                        <!-- Winner Information -->
+                        <div class="flex-1 min-w-0">
+
+                            <div class="flex items-center justify-between gap-3">
+                                <h3 class="text-sm sm:text-base font-bold text-white truncate">
+                                    {{ winner.winner_name }}
+                                </h3>
+
+                                <span class="text-neutral-500 text-[11px] sm:text-xs whitespace-nowrap">
+                                    {{ winner.time_ago }}
+                                </span>
                             </div>
 
-                            <!-- Content Area -->
-                            <div class="flex-1 flex flex-col justify-between py-0.5">
+                            <p class="mt-1 text-xs text-neutral-500 truncate">
+                                {{ winner.competition_title }}
+                            </p>
 
-                                <!-- Badge & Time Ago Header -->
-                                <div>
-                                    <div class="flex items-center justify-between mb-2">
-                                        <span
-                                            class="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[11px] font-bold px-3 py-0.5 rounded-md tracking-wide">
-                                            {{ item.badge }}
-                                        </span>
-                                        <span class="text-neutral-500 text-xs font-medium">
-                                            {{ item.time_ago }}
-                                        </span>
-                                    </div>
-
-                                    <!-- Card Title & Subtitle -->
-                                    <h3 class="text-lg sm:text-xl font-bold text-white tracking-tight">
-                                        {{ item.title }}
-                                    </h3>
-                                    <p v-if="item.subtitle"
-                                        class="text-xs font-semibold text-neutral-400 uppercase tracking-wider mt-0.5">
-                                        {{ item.subtitle }}
-                                    </p>
-                                </div>
-
-                                <!-- Description -->
-                                <p
-                                    class="text-xs sm:text-sm text-neutral-400 font-normal leading-relaxed mt-2 line-clamp-3">
-                                    {{ item.description }}
+                            <div class="flex items-center gap-2 mt-2">
+                                <span class="text-amber-400 text-sm">🏆</span>
+                                <p class="text-sm font-bold text-amber-400 truncate">
+                                    {{ winner.prize_name || 'Competition Prize' }}
                                 </p>
-
                             </div>
+
                         </div>
 
                     </div>
 
+                    <!-- Empty State -->
+                    <div v-if="!latestWinners || latestWinners.length === 0"
+                        class="py-12 text-center">
+                        <div class="text-3xl mb-3">🏆</div>
+                        <h3 class="text-white font-bold">
+                            Winners Coming Soon
+                        </h3>
+                        <p class="text-sm text-neutral-500 mt-2">
+                            Be part of our next winning story!
+                        </p>
+                    </div>
+
                 </div>
             </div>
-
         </div>
-    </section>
+
+    </div>
+</section>
+
 </template>
 
 <style scoped>

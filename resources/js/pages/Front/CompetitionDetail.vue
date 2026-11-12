@@ -14,6 +14,8 @@ const props = defineProps({
     terms: { type: Object, default: null },
     qualificationQuestions: { type: Array, default: () => [] },
     countries: { type: Array, default: () => [] },
+    remainingTickets: { type: String},
+    totalTickets: { type: String},
 });
 
 const quantity = ref(1);
@@ -464,10 +466,17 @@ async function submitQualification() {
                                                     {{ prize.title || prize.name || `Prize ${index + 1}` }}
                                                 </h3>
 
-                                                <span v-if="prize.prize_role"
-                                                    class="rounded-full border border-[#eec76f]/20 bg-[#eec76f]/10 px-2.5 py-1 text-[10px] font-bold uppercase text-[#eec76f]">
-                                                    {{ prize.prize_role.replaceAll('_', ' ') }}
-                                                </span>
+                                                <div>
+                                                    <span v-if="prize.prize_role"
+                                                        class="rounded-full border border-[#eec76f]/20 bg-[#eec76f]/10 px-2.5 py-1 text-[10px] font-bold uppercase text-[#eec76f]">
+                                                        {{ prize.prize_role.replaceAll('_', ' ') }}
+                                                    </span>&nbsp
+                                                    <span v-if="prize.prize_role"
+                                                        class="rounded-full border border-[#eec76f]/20 bg-[#eec76f]/10 px-2.5 py-1 text-[10px] font-bold uppercase text-[#eec76f]">
+                                                        Quantity : {{ prize.quantity }}
+                                                    </span>
+                                                </div>
+
                                             </div>
 
                                             <p v-if="prize.description" class="mt-2 text-sm leading-6 text-white/55">
@@ -615,6 +624,33 @@ async function submitQualification() {
                                             </p>
                                         </div>
                                     </div>
+                                    <!-- Total Entries -->
+                                    <div class="flex items-center gap-3">
+                                        <span
+                                            class="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 text-[#eec76f]">
+                                            🎟️
+                                        </span>
+                                        <div>
+                                            <p class="text-xs text-white/40">Total Entries</p>
+                                            <p class="mt-0.5 text-sm font-bold text-white/85">
+                                                {{ totalTickets }}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Remaining Entries -->
+                                    <div class="flex items-center gap-3">
+                                        <span
+                                            class="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 text-[#eec76f]">
+                                            ◉
+                                        </span>
+                                        <div>
+                                            <p class="text-xs text-white/40">Remaining Entries</p>
+                                            <p class="mt-0.5 text-sm font-bold text-white/85">
+                                                {{ remainingTickets }}
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Quantity selector -->
@@ -723,7 +759,7 @@ async function submitQualification() {
                                 <div class="flex items-center justify-between gap-4 py-3">
                                     <dt class="text-sm text-white/45">Category</dt>
                                     <dd class="text-right text-sm font-semibold text-white/85">
-                                        {{ competition.category_name || 'General' }}
+                                        {{ competition.category || 'General' }}
                                     </dd>
                                 </div>
 

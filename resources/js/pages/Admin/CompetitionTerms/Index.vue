@@ -91,7 +91,7 @@ const deleteTerm = (term) => {
                     </h1>
 
                     <p class="mt-1 text-sm text-neutral-500">
-                        Manage global Terms & Conditions versions.
+                        Manage global Terms & Conditions.
                     </p>
                 </div>
 
@@ -147,7 +147,7 @@ const deleteTerm = (term) => {
                         <input
                             v-model="search"
                             type="text"
-                            placeholder="Search by version or title..."
+                            placeholder="Search by title..."
                             class="w-full rounded-xl border border-neutral-800 bg-[#0d0d0d] py-2.5 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-neutral-600 focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20"
                         />
 
@@ -191,9 +191,6 @@ const deleteTerm = (term) => {
                         <thead class="border-b border-neutral-800 bg-[#0d0d0d]">
 
                             <tr>
-                                <th class="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-wider text-neutral-500">
-                                    Version
-                                </th>
 
                                 <th class="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-wider text-neutral-500">
                                     Title
@@ -222,17 +219,6 @@ const deleteTerm = (term) => {
                                 :key="term.id"
                                 class="transition-colors hover:bg-[#181818]"
                             >
-
-                                <!-- Version -->
-                                <td class="whitespace-nowrap px-6 py-4">
-
-                                    <span class="inline-flex rounded-lg border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 font-mono text-xs font-semibold text-amber-400">
-                                        {{ term.version }}
-                                    </span>
-
-                                </td>
-
-
                                 <!-- Title -->
                                 <td class="px-6 py-4">
 

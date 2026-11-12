@@ -16,43 +16,6 @@ class HomeController extends Controller
     {
         $title = 'PrizeGuyana';
 
-        /*
-    |--------------------------------------------------------------------------
-    | Static homepage content
-    |--------------------------------------------------------------------------
-    */
-
-
-        $updates = [
-            [
-                'id' => 1,
-                'badge' => 'Announcement',
-                'time_ago' => '4 weeks ago',
-                'title' => 'Official Partner',
-                'subtitle' => 'UFC & ZUFFA BOXING',
-                'description' => "There's a reason why we are considered the best in the business...and we work with the best in the business.",
-                'image' => '/images/latest-news/comp-1.jpg',
-            ],
-            [
-                'id' => 2,
-                'badge' => 'Winner',
-                'time_ago' => '1 month ago',
-                'title' => 'Brand New House Winner!',
-                'subtitle' => 'Mary Jo Mccourt',
-                'description' => 'Huge Congratulations to Mary who was our latest house winner, £20k cash and a Range Rover Sport',
-                'image' => '/images/latest-news/comp-2.jpg',
-            ],
-            [
-                'id' => 3,
-                'badge' => 'Announcement',
-                'time_ago' => '4 weeks ago',
-                'title' => 'Official Partner',
-                'subtitle' => 'UFC & ZUFFA BOXING',
-                'description' => "There's a reason why we are considered the best in the business...and we work with the best in the business.",
-                'image' => '/images/latest-news/comp-1.jpg',
-            ],
-        ];
-
         $stats = [
             [
                 'value' => '4.8',
@@ -228,15 +191,6 @@ class HomeController extends Controller
 
         /*
     |--------------------------------------------------------------------------
-    | 1. Featured competitions
-    |--------------------------------------------------------------------------
-    */
-
-
-
-
-        /*
-    |--------------------------------------------------------------------------
     | 2. Competitions ending today
     |--------------------------------------------------------------------------
     */
@@ -324,7 +278,7 @@ class HomeController extends Controller
         $slides = DB::table('my_competitions as c')
             ->join('competition_prizes as p', function ($join) {
                 $join->on('p.competition_id', '=', 'c.id')
-                    ->where('p.prize_role', '=', 'main')
+                    // ->where('p.prize_role', '=', 'main')
                     ->where('p.status', '=', 'active');
             })
             ->whereIn('c.status', $visibleStatuses)
@@ -362,6 +316,39 @@ class HomeController extends Controller
                 ];
             });
 
+        $latestWinners = DB::table('prize_winning_tickets as pwt')
+            ->join('users as u', 'u.id', '=', 'pwt.winner_user_id')
+            ->join('my_competitions as c', 'c.id', '=', 'pwt.competition_id')
+            ->leftJoin('competition_prizes as p', 'p.id', '=', 'pwt.prize_id')
+            ->where('pwt.status', 'fulfilled')
+            ->whereNotNull('pwt.won_at')
+            ->orderByDesc('pwt.won_at')
+            ->limit(6)
+            ->get([
+                'pwt.id',
+                'u.first_name',
+                'u.last_name',
+                'pwt.won_at',
+                'c.title as competition_title',
+                'p.name as prize_name',
+            ])
+            ->map(function ($winner) {
+                $winner->winner_name = trim(
+                    $winner->first_name . ' ' . $winner->last_name
+                );
+
+                $winner->initials = strtoupper(
+                    substr($winner->first_name, 0, 1) .
+                        substr($winner->last_name, 0, 1)
+                );
+
+                $winner->time_ago = \Carbon\Carbon::parse(
+                    $winner->won_at
+                )->diffForHumans();
+
+                return $winner;
+            });
+
         return Inertia::render('Front/Home', [
             'title' => $title,
             'slides' => $slides,
@@ -369,7 +356,7 @@ class HomeController extends Controller
             'endingToday' => $endingToday,
             'tomorrow' => $tomorrow,
             'futureSelection' => $futureSelection,
-            'updates' => $updates,
+            'latestWinners' => $latestWinners,
             'stats' => $stats,
             'faqs' => $faqs,
         ]);

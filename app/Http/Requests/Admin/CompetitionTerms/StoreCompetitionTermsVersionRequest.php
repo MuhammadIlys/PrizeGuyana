@@ -14,12 +14,6 @@ class StoreCompetitionTermsVersionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'version' => [
-                'required',
-                'string',
-                'max:50',
-                'unique:competition_terms_versions,version',
-            ],
 
             'title' => [
                 'required',

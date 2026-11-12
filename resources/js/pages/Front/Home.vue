@@ -1,6 +1,4 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
-import { Link } from '@inertiajs/vue3';
 import FrontLayout from '@/Layouts/FrontLayout.vue';
 import HomeSlider from '../../Components/Front/HomeSlider.vue';
 import Featured from '../../Components/Front/Featured.vue';
@@ -35,7 +33,7 @@ const props = defineProps({
     type : Array,
     default : () => []
   },
-  updates : {
+  latestWinners : {
     type : Array,
     default : () => []
   },
@@ -58,7 +56,7 @@ const props = defineProps({
   <EndingToday :endingToday="endingToday" />
   <Tomorrow :tomorrow="tomorrow" />
   <FutureSelection :futureSelection="futureSelection" />
-  <LatestUpdates :updates="updates" />
+  <LatestUpdates :latestWinners="latestWinners" />
   <FAQs :faqs="faqs" />
   <NewsletterSection />
   <Stats :stats="stats" />

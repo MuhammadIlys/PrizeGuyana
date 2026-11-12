@@ -4,14 +4,15 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\CompetitionsModel;
-use Illuminate\Http\Request;
+use App\Models\User;
+use App\Services\CompetitionCompletionService;
+use App\Services\NotificationService;
 use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Http\Request;
+
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
-
-use App\Models\User;
-use App\Services\NotificationService;
 
 class CompetitionTicketController extends Controller
 {
@@ -330,8 +331,6 @@ class CompetitionTicketController extends Controller
             ],
         ]);
     }
-
-
 
     /**
      * Generate a random preview of Instant Win ticket allocations.
@@ -658,260 +657,275 @@ class CompetitionTicketController extends Controller
      */
 
 
-    public function finishDraw($competitionId)
-    {
+    // public function finishDraw($competitionId)
+    // {
+    //     $competitionId = $this->decryptId($competitionId);
+
+    //     // Collect winner details for notifications after transaction.
+    //     $drawWinners = [];
+
+    //     $result = DB::transaction(function () use (
+    //         $competitionId,
+    //         &$drawWinners
+    //     ) {
+
+    //         $competition = DB::table('my_competitions')
+    //             ->where('id', $competitionId)
+    //             ->lockForUpdate()
+    //             ->first();
+
+    //         if (!$competition) {
+    //             return [
+    //                 'success' => false,
+    //                 'message' => 'Competition not found.',
+    //             ];
+    //         }
+
+    //         // Prevent duplicate draw execution.
+    //         if ($competition->status === 'completed') {
+    //             return [
+    //                 'success' => false,
+    //                 'message' => 'This competition has already been completed.',
+    //             ];
+    //         }
+
+    //         if ($competition->status !== 'active') {
+    //             return [
+    //                 'success' => false,
+    //                 'message' => 'Only active competitions can be completed.',
+    //             ];
+    //         }
+
+    //         // Get active scheduled draw prizes.
+    //         $prizes = DB::table('competition_prizes')
+    //             ->where('competition_id', $competitionId)
+    //             ->where('winning_method', 'draw')
+    //             ->where('status', 'active')
+    //             ->orderBy('sort_order')
+    //             ->orderBy('id')
+    //             ->lockForUpdate()
+    //             ->get();
+
+    //         if ($prizes->isEmpty()) {
+    //             return [
+    //                 'success' => false,
+    //                 'message' => 'No active scheduled draw prizes were found.',
+    //             ];
+    //         }
+
+    //         foreach ($prizes as $prize) {
+    //             if ((int) $prize->quantity < 1) {
+    //                 return [
+    //                     'success' => false,
+    //                     'message' => "Invalid quantity for prize: {$prize->name}.",
+    //                 ];
+    //             }
+    //         }
+
+    //         $requiredWinners = (int) $prizes->sum('quantity');
+
+    //         // Count eligible purchased tickets.
+    //         // Tickets that have already won ANY prize are excluded.
+    //         $eligibleTickets = DB::table('competition_tickets as t')
+    //             ->where('t.competition_id', $competitionId)
+    //             ->where('t.status', 'assigned')
+    //             ->whereNotNull('t.user_id')
+    //             ->whereNotNull('t.order_id')
+    //             ->whereNotExists(function ($query) {
+    //                 $query->select(DB::raw(1))
+    //                     ->from('prize_winning_tickets as pwt')
+    //                     ->whereColumn('pwt.ticket_id', 't.id');
+    //             })
+    //             ->count();
+
+    //         if ($eligibleTickets < $requiredWinners) {
+    //             return [
+    //                 'success' => false,
+    //                 'message' => "Not enough eligible tickets. Required: {$requiredWinners}; available: {$eligibleTickets}.",
+    //             ];
+    //         }
+
+    //         // Randomly select unique eligible tickets.
+    //         $selectedTickets = DB::table('competition_tickets as t')
+    //             ->where('t.competition_id', $competitionId)
+    //             ->where('t.status', 'assigned')
+    //             ->whereNotNull('t.user_id')
+    //             ->whereNotNull('t.order_id')
+    //             ->whereNotExists(function ($query) {
+    //                 $query->select(DB::raw(1))
+    //                     ->from('prize_winning_tickets as pwt')
+    //                     ->whereColumn('pwt.ticket_id', 't.id');
+    //             })
+    //             ->inRandomOrder()
+    //             ->limit($requiredWinners)
+    //             ->lockForUpdate()
+    //             ->get([
+    //                 't.id',
+    //                 't.user_id',
+    //                 't.order_id',
+    //                 't.ticket_number',
+    //             ]);
+
+    //         if ($selectedTickets->count() !== $requiredWinners) {
+    //             return [
+    //                 'success' => false,
+    //                 'message' => 'Unable to select enough eligible tickets. Please try again.',
+    //             ];
+    //         }
+
+    //         $allocationRows = [];
+    //         $ticketOffset = 0;
+    //         $now = now();
+
+    //         // Assign randomly selected tickets to configured prizes.
+    //         foreach ($prizes as $prize) {
+
+    //             $quantity = (int) $prize->quantity;
+
+    //             $prizeTickets = $selectedTickets->slice(
+    //                 $ticketOffset,
+    //                 $quantity
+    //             );
+
+    //             $ticketOffset += $quantity;
+
+    //             foreach ($prizeTickets as $ticket) {
+    //                 $allocationRows[] = [
+    //                     'competition_id' => $competitionId,
+    //                     'prize_id' => $prize->id,
+    //                     'ticket_id' => $ticket->id,
+    //                     'winning_method' => 'draw',
+    //                     'status' => 'won',
+    //                     'winner_user_id' => $ticket->user_id,
+    //                     'order_id' => $ticket->order_id,
+    //                     'won_at' => $now,
+    //                     'claimed_at' => null,
+    //                     'fulfilled_at' => null,
+    //                     'notes' => null,
+    //                     'created_at' => $now,
+    //                     'updated_at' => $now,
+    //                 ];
+
+    //                 // Collect details for customer notifications.
+    //                 $drawWinners[] = [
+    //                     'user_id' => $ticket->user_id,
+    //                     'ticket_id' => $ticket->id,
+    //                     'prize_name' => $prize->name,
+    //                     'ticket_number' => $ticket->ticket_number,
+    //                 ];
+    //             }
+    //         }
+
+    //         // Save all scheduled draw winners.
+    //         DB::table('prize_winning_tickets')->insert($allocationRows);
+
+    //         /*
+    //      * Retrieve the newly created winning record IDs
+    //      * for exact customer prize navigation.
+    //      */
+    //         $winningRecords = DB::table('prize_winning_tickets')
+    //             ->where('competition_id', $competitionId)
+    //             ->where('winning_method', 'draw')
+    //             ->whereIn(
+    //                 'ticket_id',
+    //                 $selectedTickets->pluck('id')->all()
+    //             )
+    //             ->get([
+    //                 'id',
+    //                 'ticket_id',
+    //             ])
+    //             ->keyBy('ticket_id');
+
+    //         foreach ($drawWinners as &$winner) {
+    //             $winningRecord = $winningRecords->get($winner['ticket_id']);
+
+    //             $winner['winning_id'] = $winningRecord
+    //                 ? $winningRecord->id
+    //                 : null;
+    //         }
+
+    //         unset($winner);
+
+    //         // Complete the competition at the moment of execution.
+    //         DB::table('my_competitions')
+    //             ->where('id', $competitionId)
+    //             ->update([
+    //                 'status' => 'completed',
+    //                 'completed_at' => $now,
+    //                 'updated_at' => $now,
+    //             ]);
+
+    //         return [
+    //             'success' => true,
+    //             'message' => count($allocationRows) . ' scheduled draw winners selected successfully.',
+    //             'competition_title' => $competition->title,
+    //             'total_winners' => count($allocationRows),
+    //         ];
+    //     }, 3);
+
+    //     /*
+    //  * Send notifications only after successful transaction commit.
+    //  */
+    //     if ($result['success']) {
+    //         try {
+    //             $notificationService = app(NotificationService::class);
+
+    //             // Notify each winning customer.
+    //             foreach ($drawWinners as $winner) {
+
+    //                 $user = User::find($winner['user_id']);
+
+    //                 if (!$user) {
+    //                     continue;
+    //                 }
+
+    //                 $winningTicketUrl = $winner['winning_id']
+    //                     ? route('user.prizes.show', [
+    //                         'winningTicket' => Crypt::encryptString(
+    //                             (string) $winner['winning_id']
+    //                         ),
+    //                     ])
+    //                     : route('user.dashboard');
+
+    //                 $notificationService->send(
+    //                     $user,
+    //                     'Congratulations! You Won!',
+    //                     "You have won {$winner['prize_name']} in the Scheduled Draw! Your winning ticket number is {$winner['ticket_number']}. Click to view your prize.",
+    //                     $winningTicketUrl,
+    //                     'scheduled_draw'
+    //                 );
+    //             }
+
+    //             // Notify administrators once about the completed draw.
+    //             $notificationService->notifyAdmins(
+    //                 'Scheduled Draw Completed',
+    //                 "{$result['total_winners']} winners have been selected for {$result['competition_title']}.",
+    //                 route('admin.tickets.show', [
+    //                     'competitionId' => Crypt::encryptString((string) $competitionId),
+    //                     // 'competitionId' => $competitionId,
+    //                 ]),
+    //                 'scheduled_draw'
+    //             );
+    //         } catch (\Throwable $exception) {
+    //             // Notification failure must not affect the completed draw.
+    //             report($exception);
+    //         }
+    //     }
+
+    //     return back()->with(
+    //         $result['success'] ? 'success' : 'error',
+    //         $result['message']
+    //     );
+    // }
+
+
+    public function finishDraw(
+        $competitionId,
+        CompetitionCompletionService $completionService
+    ) {
         $competitionId = $this->decryptId($competitionId);
 
-        // Collect winner details for notifications after transaction.
-        $drawWinners = [];
-
-        $result = DB::transaction(function () use (
-            $competitionId,
-            &$drawWinners
-        ) {
-
-            $competition = DB::table('my_competitions')
-                ->where('id', $competitionId)
-                ->lockForUpdate()
-                ->first();
-
-            if (!$competition) {
-                return [
-                    'success' => false,
-                    'message' => 'Competition not found.',
-                ];
-            }
-
-            // Prevent duplicate draw execution.
-            if ($competition->status === 'completed') {
-                return [
-                    'success' => false,
-                    'message' => 'This competition has already been completed.',
-                ];
-            }
-
-            if ($competition->status !== 'active') {
-                return [
-                    'success' => false,
-                    'message' => 'Only active competitions can be completed.',
-                ];
-            }
-
-            // Get active scheduled draw prizes.
-            $prizes = DB::table('competition_prizes')
-                ->where('competition_id', $competitionId)
-                ->where('winning_method', 'draw')
-                ->where('status', 'active')
-                ->orderBy('sort_order')
-                ->orderBy('id')
-                ->lockForUpdate()
-                ->get();
-
-            if ($prizes->isEmpty()) {
-                return [
-                    'success' => false,
-                    'message' => 'No active scheduled draw prizes were found.',
-                ];
-            }
-
-            foreach ($prizes as $prize) {
-                if ((int) $prize->quantity < 1) {
-                    return [
-                        'success' => false,
-                        'message' => "Invalid quantity for prize: {$prize->name}.",
-                    ];
-                }
-            }
-
-            $requiredWinners = (int) $prizes->sum('quantity');
-
-            // Count eligible purchased tickets.
-            // Tickets that have already won ANY prize are excluded.
-            $eligibleTickets = DB::table('competition_tickets as t')
-                ->where('t.competition_id', $competitionId)
-                ->where('t.status', 'assigned')
-                ->whereNotNull('t.user_id')
-                ->whereNotNull('t.order_id')
-                ->whereNotExists(function ($query) {
-                    $query->select(DB::raw(1))
-                        ->from('prize_winning_tickets as pwt')
-                        ->whereColumn('pwt.ticket_id', 't.id');
-                })
-                ->count();
-
-            if ($eligibleTickets < $requiredWinners) {
-                return [
-                    'success' => false,
-                    'message' => "Not enough eligible tickets. Required: {$requiredWinners}; available: {$eligibleTickets}.",
-                ];
-            }
-
-            // Randomly select unique eligible tickets.
-            $selectedTickets = DB::table('competition_tickets as t')
-                ->where('t.competition_id', $competitionId)
-                ->where('t.status', 'assigned')
-                ->whereNotNull('t.user_id')
-                ->whereNotNull('t.order_id')
-                ->whereNotExists(function ($query) {
-                    $query->select(DB::raw(1))
-                        ->from('prize_winning_tickets as pwt')
-                        ->whereColumn('pwt.ticket_id', 't.id');
-                })
-                ->inRandomOrder()
-                ->limit($requiredWinners)
-                ->lockForUpdate()
-                ->get([
-                    't.id',
-                    't.user_id',
-                    't.order_id',
-                    't.ticket_number',
-                ]);
-
-            if ($selectedTickets->count() !== $requiredWinners) {
-                return [
-                    'success' => false,
-                    'message' => 'Unable to select enough eligible tickets. Please try again.',
-                ];
-            }
-
-            $allocationRows = [];
-            $ticketOffset = 0;
-            $now = now();
-
-            // Assign randomly selected tickets to configured prizes.
-            foreach ($prizes as $prize) {
-
-                $quantity = (int) $prize->quantity;
-
-                $prizeTickets = $selectedTickets->slice(
-                    $ticketOffset,
-                    $quantity
-                );
-
-                $ticketOffset += $quantity;
-
-                foreach ($prizeTickets as $ticket) {
-                    $allocationRows[] = [
-                        'competition_id' => $competitionId,
-                        'prize_id' => $prize->id,
-                        'ticket_id' => $ticket->id,
-                        'winning_method' => 'draw',
-                        'status' => 'won',
-                        'winner_user_id' => $ticket->user_id,
-                        'order_id' => $ticket->order_id,
-                        'won_at' => $now,
-                        'claimed_at' => null,
-                        'fulfilled_at' => null,
-                        'notes' => null,
-                        'created_at' => $now,
-                        'updated_at' => $now,
-                    ];
-
-                    // Collect details for customer notifications.
-                    $drawWinners[] = [
-                        'user_id' => $ticket->user_id,
-                        'ticket_id' => $ticket->id,
-                        'prize_name' => $prize->name,
-                        'ticket_number' => $ticket->ticket_number,
-                    ];
-                }
-            }
-
-            // Save all scheduled draw winners.
-            DB::table('prize_winning_tickets')->insert($allocationRows);
-
-            /*
-         * Retrieve the newly created winning record IDs
-         * for exact customer prize navigation.
-         */
-            $winningRecords = DB::table('prize_winning_tickets')
-                ->where('competition_id', $competitionId)
-                ->where('winning_method', 'draw')
-                ->whereIn(
-                    'ticket_id',
-                    $selectedTickets->pluck('id')->all()
-                )
-                ->get([
-                    'id',
-                    'ticket_id',
-                ])
-                ->keyBy('ticket_id');
-
-            foreach ($drawWinners as &$winner) {
-                $winningRecord = $winningRecords->get($winner['ticket_id']);
-
-                $winner['winning_id'] = $winningRecord
-                    ? $winningRecord->id
-                    : null;
-            }
-
-            unset($winner);
-
-            // Complete the competition at the moment of execution.
-            DB::table('my_competitions')
-                ->where('id', $competitionId)
-                ->update([
-                    'status' => 'completed',
-                    'completed_at' => $now,
-                    'updated_at' => $now,
-                ]);
-
-            return [
-                'success' => true,
-                'message' => count($allocationRows) . ' scheduled draw winners selected successfully.',
-                'competition_title' => $competition->title,
-                'total_winners' => count($allocationRows),
-            ];
-        }, 3);
-
-        /*
-     * Send notifications only after successful transaction commit.
-     */
-        if ($result['success']) {
-            try {
-                $notificationService = app(NotificationService::class);
-
-                // Notify each winning customer.
-                foreach ($drawWinners as $winner) {
-
-                    $user = User::find($winner['user_id']);
-
-                    if (!$user) {
-                        continue;
-                    }
-
-                    $winningTicketUrl = $winner['winning_id']
-                        ? route('user.prizes.show', [
-                            'winningTicket' => Crypt::encryptString(
-                                (string) $winner['winning_id']
-                            ),
-                        ])
-                        : route('user.dashboard');
-
-                    $notificationService->send(
-                        $user,
-                        'Congratulations! You Won!',
-                        "You have won {$winner['prize_name']} in the Scheduled Draw! Your winning ticket number is {$winner['ticket_number']}. Click to view your prize.",
-                        $winningTicketUrl,
-                        'scheduled_draw'
-                    );
-                }
-
-                // Notify administrators once about the completed draw.
-                $notificationService->notifyAdmins(
-                    'Scheduled Draw Completed',
-                    "{$result['total_winners']} winners have been selected for {$result['competition_title']}.",
-                    route('admin.tickets.show', [
-                        'competitionId' => Crypt::encryptString((string) $competitionId),
-                        // 'competitionId' => $competitionId,
-                    ]),
-                    'scheduled_draw'
-                );
-            } catch (\Throwable $exception) {
-                // Notification failure must not affect the completed draw.
-                report($exception);
-            }
-        }
+        $result = $completionService->complete($competitionId);
 
         return back()->with(
             $result['success'] ? 'success' : 'error',

@@ -17,15 +17,6 @@ class UpdateCompetitionTermsVersionRequest extends FormRequest
         $competitionTerm = $this->route('competition_term');
 
         return [
-            'version' => [
-                'required',
-                'string',
-                'max:50',
-                Rule::unique(
-                    'competition_terms_versions',
-                    'version'
-                )->ignore($competitionTerm->id),
-            ],
 
             'title' => [
                 'required',

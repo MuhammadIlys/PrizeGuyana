@@ -4,7 +4,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 
 const form = useForm({
-    version: '',
+    // version: '',
     title: '',
     content: '',
     is_active: true,
@@ -86,7 +86,7 @@ const submit = () => {
                     <div class="grid gap-5 p-5 sm:grid-cols-2">
 
                         <!-- Version -->
-                        <div>
+                        <!-- <div>
                             <label for="version" class="mb-2 block text-xs font-semibold text-neutral-300">
                                 Version <span class="text-amber-400">*</span>
                             </label>
@@ -103,7 +103,7 @@ const submit = () => {
                             <p v-else class="mt-1.5 text-xs text-neutral-600">
                                 Use a version such as v1.0 or v1.1.
                             </p>
-                        </div>
+                        </div> -->
 
                         <!-- Title -->
                         <div>

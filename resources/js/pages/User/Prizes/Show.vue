@@ -276,7 +276,7 @@ const submitClaim = () => {
         >
             {{
                 normalizedStatus === 'won'
-                    ? 'Congratulations · Instant Win'
+                    ? 'Congratulations'
                     : isClaimUnderReview
                         ? 'Claim Under Review'
                         : normalizedStatus === 'claimed'
@@ -306,7 +306,7 @@ const submitClaim = () => {
         <p class="mt-3 max-w-xl text-sm leading-7 text-neutral-400 sm:text-base">
             {{
                 normalizedStatus === 'won'
-                    ? 'Your ticket matched a preselected winning entry. Submit your claim to begin the prize verification process.'
+                    ? 'Your ticket matched a winning entry. Submit your claim to begin the prize verification process.'
                     : isClaimUnderReview
                         ? 'Your prize claim has been received and is currently awaiting review by our team.'
                         : normalizedStatus === 'claimed'
@@ -528,7 +528,7 @@ const submitClaim = () => {
                 </section>
 
                 <!-- Important information -->
-                <section class="rounded-2xl border border-amber-500/15 bg-amber-500/[0.035] p-5 sm:p-6">
+                <!-- <section class="rounded-2xl border border-amber-500/15 bg-amber-500/[0.035] p-5 sm:p-6">
                     <div class="flex items-start gap-3">
                         <svg viewBox="0 0 24 24" class="mt-0.5 h-5 w-5 shrink-0 text-amber-400" fill="none"
                             stroke="currentColor" stroke-width="1.7">
@@ -562,7 +562,7 @@ const submitClaim = () => {
 
                         </div>
                     </div>
-                </section>
+                </section> -->
 
                 <!-- Footer actions -->
                 <div class="flex flex-col gap-3 pb-6 sm:flex-row sm:justify-between">

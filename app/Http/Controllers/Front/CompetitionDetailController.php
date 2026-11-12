@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Front;
 
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Models\CompetitionCategory;
+use App\Models\CompetitionTicket;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -19,6 +21,8 @@ class CompetitionDetailController extends Controller
         $competition = DB::table('my_competitions')
             ->where('id', $id)
             ->first();
+        $category = CompetitionCategory::findorfail($competition->category_id)->name;
+        $competition->category = $category;
 
         if (!$competition) {
             abort(404, 'Competition not found.');
@@ -69,6 +73,14 @@ class CompetitionDetailController extends Controller
             ->where('competition_id', $competition->id)
             ->get();
 
+        $ticketStats = DB::table('competition_tickets')
+            ->where('competition_id', $competition->id)
+            ->selectRaw('COUNT(*) as total_tickets')
+            ->selectRaw("SUM(CASE WHEN status = 'available' THEN 1 ELSE 0 END) as remaining_tickets")
+            ->first();
+
+        $totalTickets = $ticketStats->total_tickets;
+        $remainingTickets = $ticketStats->remaining_tickets;
 
         // 6. Pass all detail-page data to Vue
         return Inertia::render('Front/CompetitionDetail', [
@@ -77,6 +89,8 @@ class CompetitionDetailController extends Controller
             'terms'                 => $terms,
             'qualificationQuestions' => $qualificationQuestions,
             'countries'             => $countries,
+            'totalTickets' => $totalTickets,
+            'remainingTickets' => $remainingTickets
         ]);
     }
 

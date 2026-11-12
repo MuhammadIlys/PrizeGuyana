@@ -50,18 +50,9 @@ class CompetitionTermsVersionController extends Controller
 
     public function create()
     {
-        $termsVersions = CompetitionTermsVersion::query()
-            ->where('is_active', true)
-            ->orderByDesc('id')
-            ->get([
-                'id',
-                'version',
-                'title',
-            ]);
+        
 
-        return Inertia::render('Admin/CompetitionTerms/Create', [
-            'termsVersions' => $termsVersions,
-        ]);
+        return Inertia::render('Admin/CompetitionTerms/Create');
     }
 
     public function store(StoreCompetitionTermsVersionRequest $request)
