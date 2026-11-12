@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\CompetitionsModel;
 use Illuminate\Http\Request;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Crypt;
@@ -987,6 +988,10 @@ class CompetitionTicketController extends Controller
 
                 DB::table('competition_tickets')->insert($rows);
             }
+
+            // Publish competition so it can be active.
+            CompetitionsModel::where('id', $competitionId)
+                ->update(['status' => 'published']);
 
             return [
                 'success' => true,

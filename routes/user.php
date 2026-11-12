@@ -45,9 +45,9 @@ Route::middleware('auth')->group(function () {
     ])->name('prizes.show');
 
     Route::post(
-    '/my-prizes/{winningTicket}/claim',
-    [TicketsController::class, 'submitPrizeClaim']
-)->name('prizes.claim');
+        '/my-prizes/{winningTicket}/claim',
+        [TicketsController::class, 'submitPrizeClaim']
+    )->name('prizes.claim');
 
 
     Route::prefix('entries')

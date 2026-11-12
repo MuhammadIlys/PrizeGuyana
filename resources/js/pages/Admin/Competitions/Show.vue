@@ -559,7 +559,7 @@ const yesNoClass = (value) =>
             </section>
 
             <!-- SEO -->
-            <section class="rounded-2xl border border-amber-500/20 bg-black p-5 sm:p-6">
+            <!-- <section class="rounded-2xl border border-amber-500/20 bg-black p-5 sm:p-6">
                 <div class="mb-5">
                     <h2 class="text-lg font-bold text-amber-400">SEO Metadata</h2>
                     <p class="mt-1 text-sm text-amber-100/40">
@@ -586,7 +586,7 @@ const yesNoClass = (value) =>
                         </p>
                     </div>
                 </div>
-            </section>
+            </section> -->
 
             <!-- Video -->
             <section class="rounded-2xl border border-amber-500/20 bg-black p-5 sm:p-6">

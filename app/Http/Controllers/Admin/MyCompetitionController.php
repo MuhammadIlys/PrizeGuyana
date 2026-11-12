@@ -173,15 +173,15 @@ class MyCompetitionController extends Controller
             ->toArray();
 
         $competition->starts_at_local = $competition->starts_at
-            ? Carbon::parse($competition->starts_at)->timezone('America/Guyana')->format('Y-m-d\TH:i')
+            ? Carbon::parse($competition->starts_at)->format('Y-m-d\TH:i')
             : '';
 
         $competition->ends_at_local = $competition->ends_at
-            ? Carbon::parse($competition->ends_at)->timezone('America/Guyana')->format('Y-m-d\TH:i')
+            ? Carbon::parse($competition->ends_at)->format('Y-m-d\TH:i')
             : '';
 
         $competition->draw_at_local = $competition->draw_at
-            ? Carbon::parse($competition->draw_at)->timezone('America/Guyana')->format('Y-m-d\TH:i')
+            ? Carbon::parse($competition->draw_at)->format('Y-m-d\TH:i')
             : '';
 
         return Inertia::render('Admin/Competitions/Edit', [
@@ -201,6 +201,7 @@ class MyCompetitionController extends Controller
         }
 
         $competition = CompetitionsModel::findOrFail($id);
+
         $data = $request->validated();
 
         $data['slug'] = Str::slug($data['title']);

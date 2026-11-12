@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -260,7 +261,7 @@ class TicketsController extends Controller
                     'New Prize Claim Submitted',
                     "{$customer->first_name} {$customer->last_name} has submitted a claim for {$claimDetails->prize_name} (Ticket #{$claimDetails->ticket_number}) in {$claimDetails->competition_title}. Please review the claim.",
                     route('admin.prize-claims.show', [
-                        'id' => encrypt((string) $winningTicketId),
+                        'id' => Crypt::encryptString((string) $winningTicketId),
                     ]),
                     'prize_claim'
                 );

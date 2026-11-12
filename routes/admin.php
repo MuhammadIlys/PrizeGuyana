@@ -75,4 +75,37 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::resource('entries', EntriesController::class)
         ->only(['index', 'show']);
+
+    // Draws Management
+    Route::controller(DrawController::class)
+        ->prefix('draws')
+        ->name('draws.')
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/{competitionId}', 'show')->name('show');
+            Route::post('/{competitionId}/execute', 'execute')->name('execute');
+        });
+
+    // Winners
+    Route::controller(WinnersController::class)
+        ->prefix('winners')
+        ->name('winners.')
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/{id}', 'show')->name('show');
+        });
+
+    Route::get('/reports', [ReportController::class, 'index'])
+        ->name('reports.index');
+
+    // Admin Management
+    Route::prefix('admins')
+        ->name('admins.')
+        ->controller(AdminManagementController::class)
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('/', 'store')->name('store');
+            Route::put('/{id}', 'update')->name('update');
+            Route::delete('/{id}', 'destroy')->name('destroy');
+        });
 });

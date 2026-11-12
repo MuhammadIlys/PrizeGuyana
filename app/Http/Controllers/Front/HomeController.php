@@ -362,7 +362,6 @@ class HomeController extends Controller
                 ];
             });
 
-
         return Inertia::render('Front/Home', [
             'title' => $title,
             'slides' => $slides,

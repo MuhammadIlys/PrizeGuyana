@@ -393,16 +393,40 @@ const childClass = (path, exclude = []) => [
                         Draw Management
                     </p>
 
-                    <div v-for="item in [
-                        { label: 'Draws', icon: 'draws' },
-                        { label: 'Winners', icon: 'winners' },
-                    ]" :key="item.label" :title="item.label + ' — route not connected yet'"
-                        class="mb-1 flex cursor-not-allowed items-center rounded-xl px-3 py-2.5 text-xs font-semibold text-neutral-600"
-                        :class="isCollapsed ? 'justify-center' : ''">
-                        <span v-if="!isCollapsed">{{ item.label }}</span>
-                        <span v-else class="text-[10px]">{{ item.label[0] }}</span>
-                    </div>
+
                 </div>
+
+                <!-- Draws -->
+                <Link :href="route('admin.draws.index')" :title="isCollapsed ? 'Draws' : ''"
+                    class="mb-1 flex items-center rounded-xl px-3 py-2.5 text-xs font-semibold transition" :class="[
+                        isCollapsed ? 'justify-center' : 'justify-start',
+                        route().current('admin.draws.*')
+                            ? 'bg-amber-500/10 text-amber-400'
+                            : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
+                    ]">
+                    <svg class="h-4 w-4 shrink-0" :class="!isCollapsed ? 'mr-3' : ''" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                            d="M8 3v3m8-3v3M4 9h16M5 5h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1zm3 8h3m-3 4h8" />
+                    </svg>
+                    <span v-if="!isCollapsed">Draws</span>
+                </Link>
+
+                <!-- Winners -->
+                <Link :href="route('admin.winners.index')" :title="isCollapsed ? 'Winners' : ''"
+                    class="mb-1 flex items-center rounded-xl px-3 py-2.5 text-xs font-semibold transition" :class="[
+                        isCollapsed ? 'justify-center' : 'justify-start',
+                        route().current('admin.winners.*')
+                            ? 'bg-amber-500/10 text-amber-400'
+                            : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
+                    ]">
+                    <svg class="h-4 w-4 shrink-0" :class="!isCollapsed ? 'mr-3' : ''" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                            d="M8 3h8v5a4 4 0 01-8 0V3zm0 2H4v2a4 4 0 004 4m8-6h4v2a4 4 0 01-4 4M12 12v6m-4 3h8" />
+                    </svg>
+                    <span v-if="!isCollapsed">Winners</span>
+                </Link>
 
                 <!-- REPORTS -->
                 <div class="mb-5">
@@ -411,16 +435,39 @@ const childClass = (path, exclude = []) => [
                         Analytics
                     </p>
 
-                    <div :title="'Reports — route not connected yet'"
-                        class="mb-1 flex cursor-not-allowed items-center rounded-xl px-3 py-2.5 text-xs font-semibold text-neutral-600"
-                        :class="isCollapsed ? 'justify-center' : ''">
+                    <Link :href="route('admin.reports.index')" @click="navigate" title="Reports" :class="[
+                        'mb-1 flex items-center rounded-xl px-3 py-2.5 text-xs font-semibold transition-all duration-200',
+                        navClass('/admin/reports'),
+                        isCollapsed ? 'justify-center' : ''
+                    ]">
+                        <svg class="h-4 w-4 shrink-0" :class="!isCollapsed ? 'mr-3' : ''" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 3v18h18M7 14l4-4 3 3 6-7" />
+                        </svg>
+
                         <span v-if="!isCollapsed">Reports</span>
                         <span v-else class="text-[10px]">R</span>
-                    </div>
+                    </Link>
                 </div>
 
+                <Link :href="route('admin.admins.index')" @click="navigate" title="Admin Management" :class="[
+                    'mb-1 flex items-center rounded-xl px-3 py-2.5 text-xs font-semibold transition-all duration-200',
+                    navClass('/admin/admins'),
+                    isCollapsed ? 'justify-center' : ''
+                ]">
+                    <svg class="h-4 w-4 shrink-0" :class="!isCollapsed ? 'mr-3' : ''" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M16 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2m12-10a4 4 0 100-8 4 4 0 000 8zm6 10v-2a4 4 0 00-3-3.87M10 11a4 4 0 100-8 4 4 0 000 8z" />
+                    </svg>
+
+                    <span v-if="!isCollapsed">Admin Management</span>
+                    <span v-else class="text-[10px]">A</span>
+                </Link>
+
                 <!-- SYSTEM -->
-                <div class="mb-5">
+                <!-- <div class="mb-5">
                     <p v-if="!isCollapsed"
                         class="mb-2 px-3 text-[10px] font-bold uppercase tracking-wider text-neutral-500">
                         System
@@ -433,7 +480,7 @@ const childClass = (path, exclude = []) => [
                         <span v-if="!isCollapsed">{{ item }}</span>
                         <span v-else class="text-[10px]">{{ item[0] }}</span>
                     </div>
-                </div>
+                </div> -->
 
             </nav>
 

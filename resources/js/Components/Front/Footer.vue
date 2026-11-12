@@ -70,15 +70,15 @@ import logoUrl from '/resources/images/logo.png'; // Adjust path if needed
         <div class="flex flex-col space-y-3">
           <h3 class="text-sm font-bold text-white tracking-wide">Information</h3>
           <ul class="space-y-2 text-xs sm:text-sm font-medium">
-            <li>
+            <!-- <li>
               <Link :href="route('home')" class="hover:text-amber-400 transition-colors">FAQ</Link>
-            </li>
+            </li> -->
             <li>
               <Link :href="route('about')" class="hover:text-amber-400 transition-colors">About</Link>
             </li>
-            <li>
+            <!-- <li>
               <Link :href="route('home')" class="hover:text-amber-400 transition-colors">Winners</Link>
-            </li>
+            </li> -->
             <li>
               <Link :href="route('contact')" class="hover:text-amber-400 transition-colors">Contact</Link>
             </li>
@@ -103,9 +103,12 @@ import logoUrl from '/resources/images/logo.png'; // Adjust path if needed
           <h3 class="text-sm font-bold text-white tracking-wide">Support</h3>
           <ul class="space-y-2 text-xs sm:text-sm font-medium">
             <li>
-              <Link :href="route('home')" class="hover:text-amber-400 transition-colors">My Account</Link>
+              <Link :href="route('contact')" class="hover:text-amber-400 transition-colors">Contact</Link>
             </li>
             <li>
+              <Link :href="route('register')" class="hover:text-amber-400 transition-colors">My Account</Link>
+            </li>
+            <!-- <li>
               <Link :href="route('home')" class="hover:text-amber-400 transition-colors">My Tickets</Link>
             </li>
             <li>
@@ -113,7 +116,7 @@ import logoUrl from '/resources/images/logo.png'; // Adjust path if needed
             </li>
             <li>
               <Link :href="route('home')" class="hover:text-amber-400 transition-colors">Cashback</Link>
-            </li>
+            </li> -->
           </ul>
         </div>
 

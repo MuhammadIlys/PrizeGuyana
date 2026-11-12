@@ -2,6 +2,7 @@
 <script setup>
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
+import RevenueAreaChart from '@/Components/Admin/RevenueAreaChart.vue';
 
 defineOptions({
     layout: AdminLayout,
@@ -13,6 +14,10 @@ const props = defineProps({
         default: () => ({}),
     },
     revenueByCurrency: {
+        type: Array,
+        default: () => [],
+    },
+    revenueTrend: {
         type: Array,
         default: () => [],
     },
@@ -328,8 +333,101 @@ function entryPercentage(competition) {
         </section>
 
         <!-- Competition and Revenue Overview -->
-        <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <div class="grid grid-cols-1 gap-6 xl:grid-cols-1">
 
+            <!-- Revenue Overview -->
+            <section class="rounded-2xl border border-neutral-800 bg-[#121212] p-6">
+
+                <div class="mb-6">
+                    <h2 class="text-lg font-bold text-white">
+                        Revenue Overview
+                    </h2>
+                    <p class="mt-1 text-xs text-neutral-500">
+                        Lifetime revenue and daily revenue over the last 30 days
+                    </p>
+                </div>
+
+                <!-- Lifetime Revenue by Currency -->
+                <div v-if="revenueByCurrency.length" class="mb-6 space-y-3">
+
+                    <div
+                        v-for="revenue in revenueByCurrency"
+                        :key="revenue.currency"
+                        class="flex items-center justify-between gap-4 rounded-xl border border-neutral-800 bg-neutral-950 p-4">
+
+                        <div>
+                            <p class="text-xs text-neutral-500">
+                                Currency
+                            </p>
+                            <p class="mt-1 font-semibold text-white">
+                                {{ revenue.currency }}
+                            </p>
+                        </div>
+
+                        <div class="text-right">
+                            <p class="text-xs text-neutral-500">
+                                Lifetime Revenue
+                            </p>
+                            <p class="mt-1 text-xl font-bold text-amber-400">
+                                {{ revenue.total }} {{ revenue.currency }}
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div v-else
+                    class="mb-6 rounded-xl border border-dashed border-neutral-800 px-4 py-6 text-center">
+                    <p class="text-sm text-neutral-500">
+                        No paid orders recorded yet.
+                    </p>
+                </div>
+
+                <!-- Daily Revenue Area Chart -->
+                <div class="border-t border-neutral-800 pt-5">
+                    <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <h3 class="text-sm font-semibold text-white">
+                                Daily Revenue
+                            </h3>
+                            <p class="mt-1 text-xs text-neutral-500">
+                                Last 30 days · currencies shown separately
+                            </p>
+                        </div>
+
+                        <span class="rounded-lg bg-neutral-900 px-3 py-1.5 text-xs text-neutral-400">
+                            {{ [...new Set(revenueTrend.map(item => item.currency))].length }} currencies
+                        </span>
+                    </div>
+
+                    <RevenueAreaChart :revenue-trend="revenueTrend" />
+                </div>
+
+                <div class="mt-5 grid grid-cols-2 gap-3">
+
+                    <div class="rounded-xl border border-neutral-800 bg-neutral-950 p-4">
+                        <p class="text-xs text-neutral-500">
+                            Failed Orders
+                        </p>
+                        <p class="mt-2 text-2xl font-bold text-red-400">
+                            {{ formatNumber(stats.failed_orders) }}
+                        </p>
+                    </div>
+
+                    <div class="rounded-xl border border-neutral-800 bg-neutral-950 p-4">
+                        <p class="text-xs text-neutral-500">
+                            Total Payments
+                        </p>
+                        <p class="mt-2 text-2xl font-bold text-white">
+                            {{ formatNumber(stats.total_payments) }}
+                        </p>
+                    </div>
+
+                </div>
+
+            </section>
+            
             <!-- Competition Overview -->
             <section class="rounded-2xl border border-neutral-800 bg-[#121212] p-6">
 
@@ -395,78 +493,6 @@ function entryPercentage(competition) {
                         </p>
                         <p class="mt-2 text-2xl font-bold text-white">
                             {{ formatNumber(stats.available_tickets) }}
-                        </p>
-                    </div>
-
-                </div>
-
-            </section>
-
-            <!-- Revenue Overview -->
-            <section class="rounded-2xl border border-neutral-800 bg-[#121212] p-6">
-
-                <div class="mb-6">
-                    <h2 class="text-lg font-bold text-white">
-                        Revenue Overview
-                    </h2>
-                    <p class="mt-1 text-xs text-neutral-500">
-                        Revenue from successfully paid orders
-                    </p>
-                </div>
-
-                <div v-if="revenueByCurrency.length" class="space-y-3">
-
-                    <div
-                        v-for="revenue in revenueByCurrency"
-                        :key="revenue.currency"
-                        class="flex items-center justify-between gap-4 rounded-xl border border-neutral-800 bg-neutral-950 p-4">
-
-                        <div>
-                            <p class="text-xs text-neutral-500">
-                                Currency
-                            </p>
-                            <p class="mt-1 font-semibold text-white">
-                                {{ revenue.currency }}
-                            </p>
-                        </div>
-
-                        <div class="text-right">
-                            <p class="text-xs text-neutral-500">
-                                Total Revenue
-                            </p>
-                            <p class="mt-1 text-xl font-bold text-amber-400">
-                                {{ revenue.total }} {{ revenue.currency }}
-                            </p>
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <div v-else
-                    class="rounded-xl border border-dashed border-neutral-800 px-4 py-10 text-center">
-                    <p class="text-sm text-neutral-500">
-                        No paid orders recorded yet.
-                    </p>
-                </div>
-
-                <div class="mt-5 grid grid-cols-2 gap-3">
-
-                    <div class="rounded-xl border border-neutral-800 bg-neutral-950 p-4">
-                        <p class="text-xs text-neutral-500">
-                            Failed Orders
-                        </p>
-                        <p class="mt-2 text-2xl font-bold text-red-400">
-                            {{ formatNumber(stats.failed_orders) }}
-                        </p>
-                    </div>
-
-                    <div class="rounded-xl border border-neutral-800 bg-neutral-950 p-4">
-                        <p class="text-xs text-neutral-500">
-                            Total Payments
-                        </p>
-                        <p class="mt-2 text-2xl font-bold text-white">
-                            {{ formatNumber(stats.total_payments) }}
                         </p>
                     </div>
 

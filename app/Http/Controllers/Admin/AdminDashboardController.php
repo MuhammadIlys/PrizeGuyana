@@ -5,21 +5,20 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\Crypt;
+use Inertia\Inertia;
 
 class AdminDashboardController extends Controller
 {
-
     public function index()
     {
         $now = now();
 
         /*
-    |--------------------------------------------------------------------------
-    | Customers
-    |--------------------------------------------------------------------------
-    */
+        |--------------------------------------------------------------------------
+        | Customers
+        |--------------------------------------------------------------------------
+        */
 
         $totalCustomers = DB::table('users')
             ->where('role', 'user')
@@ -31,7 +30,7 @@ class AdminDashboardController extends Controller
             ->orderByDesc('created_at')
             ->limit(5)
             ->get()
-            ->map(fn($customer) => [
+            ->map(fn ($customer) => [
                 'encrypted_id' => Crypt::encryptString((string) $customer->id),
                 'name' => $customer->name,
                 'email' => $customer->email,
@@ -41,10 +40,10 @@ class AdminDashboardController extends Controller
             ]);
 
         /*
-    |--------------------------------------------------------------------------
-    | Competitions
-    |--------------------------------------------------------------------------
-    */
+        |--------------------------------------------------------------------------
+        | Competitions
+        |--------------------------------------------------------------------------
+        */
 
         $totalCompetitions = DB::table('my_competitions')->count();
 
@@ -54,6 +53,7 @@ class AdminDashboardController extends Controller
 
         $activeCompetitions = DB::table('my_competitions')
             ->whereNotNull('published_at')
+            ->whereNull('completed_at')
             ->where(function ($query) use ($now) {
                 $query->whereNull('starts_at')
                     ->orWhere('starts_at', '<=', $now);
@@ -66,25 +66,20 @@ class AdminDashboardController extends Controller
 
         $upcomingCompetitions = DB::table('my_competitions')
             ->whereNotNull('published_at')
+            ->whereNull('completed_at')
             ->where('starts_at', '>', $now)
             ->count();
 
         $completedCompetitions = DB::table('my_competitions')
             ->whereNotNull('published_at')
-            ->whereNotNull('ends_at')
-            ->where('ends_at', '<', $now)
+            ->whereNotNull('completed_at')
             ->count();
 
         /*
-    |--------------------------------------------------------------------------
-    | Tickets & Paid Entries
-    |--------------------------------------------------------------------------
-    |
-    | available = ticket available for allocation
-    | assigned  = ticket allocated to an order
-    | paid entry = assigned ticket linked to a paid order
-    |
-    */
+        |--------------------------------------------------------------------------
+        | Tickets & Paid Entries
+        |--------------------------------------------------------------------------
+        */
 
         $totalTickets = DB::table('competition_tickets')->count();
 
@@ -103,10 +98,10 @@ class AdminDashboardController extends Controller
             ->count();
 
         /*
-    |--------------------------------------------------------------------------
-    | Orders
-    |--------------------------------------------------------------------------
-    */
+        |--------------------------------------------------------------------------
+        | Orders
+        |--------------------------------------------------------------------------
+        */
 
         $totalOrders = DB::table('orders')->count();
 
@@ -137,7 +132,7 @@ class AdminDashboardController extends Controller
             ->orderByDesc('orders.created_at')
             ->limit(5)
             ->get()
-            ->map(fn($order) => [
+            ->map(fn ($order) => [
                 'encrypted_id' => Crypt::encryptString((string) $order->id),
                 'order_number' => $order->order_number,
                 'customer_name' => $order->customer_name ?? 'Unknown customer',
@@ -151,10 +146,10 @@ class AdminDashboardController extends Controller
             ]);
 
         /*
-    |--------------------------------------------------------------------------
-    | Revenue - Keep Currencies Separate
-    |--------------------------------------------------------------------------
-    */
+        |--------------------------------------------------------------------------
+        | Lifetime Revenue - Keep Currencies Separate
+        |--------------------------------------------------------------------------
+        */
 
         $revenueByCurrency = DB::table('orders')
             ->where('payment_status', 'paid')
@@ -165,16 +160,76 @@ class AdminDashboardController extends Controller
             ->groupBy('currency')
             ->orderBy('currency')
             ->get()
-            ->map(fn($row) => [
+            ->map(fn ($row) => [
                 'currency' => $row->currency,
                 'total' => number_format((float) $row->total_revenue, 2),
             ]);
 
         /*
-    |--------------------------------------------------------------------------
-    | Payments
-    |--------------------------------------------------------------------------
-    */
+        |--------------------------------------------------------------------------
+        | Daily Revenue - Last 30 Days
+        |--------------------------------------------------------------------------
+        |
+        | Uses paid_at rather than created_at.
+        | Each currency is returned separately.
+        | Missing dates are filled with zero revenue.
+        |
+        */
+
+        $chartStartDate = $now->copy()->subDays(29)->startOfDay();
+        $chartEndDate = $now->copy()->endOfDay();
+
+        $dailyRevenue = DB::table('orders')
+            ->where('payment_status', 'paid')
+            ->whereNotNull('paid_at')
+            ->whereBetween('paid_at', [
+                $chartStartDate,
+                $chartEndDate,
+            ])
+            ->select(
+                DB::raw('DATE(paid_at) as revenue_date'),
+                'currency',
+                DB::raw('SUM(total) as daily_revenue')
+            )
+            ->groupBy(
+                DB::raw('DATE(paid_at)'),
+                'currency'
+            )
+            ->orderBy('revenue_date')
+            ->get();
+
+        $revenueCurrencies = $revenueByCurrency
+            ->pluck('currency')
+            ->filter()
+            ->unique()
+            ->values();
+
+        $dailyRevenueLookup = [];
+
+        foreach ($dailyRevenue as $row) {
+            $dailyRevenueLookup[$row->currency][$row->revenue_date] =
+                (float) $row->daily_revenue;
+        }
+
+        $revenueTrend = collect();
+
+        foreach ($revenueCurrencies as $currency) {
+            for ($date = $chartStartDate->copy(); $date->lte($chartEndDate); $date->addDay()) {
+                $dateKey = $date->format('Y-m-d');
+
+                $revenueTrend->push([
+                    'date' => $dateKey,
+                    'currency' => $currency,
+                    'revenue' => $dailyRevenueLookup[$currency][$dateKey] ?? 0,
+                ]);
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Payments
+        |--------------------------------------------------------------------------
+        */
 
         $paymentCounts = DB::table('payments')
             ->select(
@@ -184,7 +239,7 @@ class AdminDashboardController extends Controller
             ->groupBy('status')
             ->orderBy('status')
             ->get()
-            ->map(fn($payment) => [
+            ->map(fn ($payment) => [
                 'status' => $payment->status,
                 'total' => (int) $payment->total,
             ]);
@@ -192,14 +247,10 @@ class AdminDashboardController extends Controller
         $totalPayments = DB::table('payments')->count();
 
         /*
-    |--------------------------------------------------------------------------
-    | Top Competitions
-    |--------------------------------------------------------------------------
-    |
-    | allocated_entries = all assigned tickets
-    | sold_entries      = assigned tickets linked to paid orders
-    |
-    */
+        |--------------------------------------------------------------------------
+        | Top Competitions
+        |--------------------------------------------------------------------------
+        */
 
         $topCompetitions = DB::table('my_competitions as competitions')
             ->leftJoin(
@@ -221,30 +272,30 @@ class AdminDashboardController extends Controller
                 'competitions.main_image',
                 'competitions.total_entries',
                 DB::raw("
-                COUNT(
-                    CASE
-                        WHEN tickets.status = 'assigned'
-                        THEN 1
-                    END
-                ) as allocated_entries
-            "),
+                    COUNT(
+                        CASE
+                            WHEN tickets.status = 'assigned'
+                            THEN 1
+                        END
+                    ) as allocated_entries
+                "),
                 DB::raw("
-                COUNT(
-                    CASE
-                        WHEN tickets.status = 'assigned'
-                        AND orders.payment_status = 'paid'
-                        THEN 1
-                    END
-                ) as sold_entries
-            "),
+                    COUNT(
+                        CASE
+                            WHEN tickets.status = 'assigned'
+                            AND orders.payment_status = 'paid'
+                            THEN 1
+                        END
+                    ) as sold_entries
+                "),
                 DB::raw("
-                COUNT(
-                    CASE
-                        WHEN tickets.status = 'available'
-                        THEN 1
-                    END
-                ) as available_entries
-            ")
+                    COUNT(
+                        CASE
+                            WHEN tickets.status = 'available'
+                            THEN 1
+                        END
+                    ) as available_entries
+                ")
             )
             ->groupBy(
                 'competitions.id',
@@ -256,7 +307,7 @@ class AdminDashboardController extends Controller
             ->orderByDesc('sold_entries')
             ->limit(5)
             ->get()
-            ->map(fn($competition) => [
+            ->map(fn ($competition) => [
                 'encrypted_id' => Crypt::encryptString((string) $competition->id),
                 'title' => $competition->title,
                 'slug' => $competition->slug,
@@ -273,10 +324,10 @@ class AdminDashboardController extends Controller
             ]);
 
         /*
-    |--------------------------------------------------------------------------
-    | Upcoming Draws
-    |--------------------------------------------------------------------------
-    */
+        |--------------------------------------------------------------------------
+        | Upcoming Draws
+        |--------------------------------------------------------------------------
+        */
 
         $upcomingDraws = DB::table('my_competitions as competitions')
             ->leftJoin(
@@ -292,6 +343,7 @@ class AdminDashboardController extends Controller
                 'orders.id'
             )
             ->whereNotNull('competitions.published_at')
+            ->whereNull('competitions.completed_at')
             ->whereNotNull('competitions.draw_at')
             ->where('competitions.draw_at', '>', $now)
             ->select(
@@ -299,22 +351,22 @@ class AdminDashboardController extends Controller
                 'competitions.title',
                 'competitions.draw_at',
                 DB::raw("
-                COUNT(
-                    CASE
-                        WHEN tickets.status = 'assigned'
-                        AND orders.payment_status = 'paid'
-                        THEN 1
-                    END
-                ) as sold_entries
-            "),
+                    COUNT(
+                        CASE
+                            WHEN tickets.status = 'assigned'
+                            AND orders.payment_status = 'paid'
+                            THEN 1
+                        END
+                    ) as sold_entries
+                "),
                 DB::raw("
-                COUNT(
-                    CASE
-                        WHEN tickets.status = 'assigned'
-                        THEN 1
-                    END
-                ) as allocated_entries
-            ")
+                    COUNT(
+                        CASE
+                            WHEN tickets.status = 'assigned'
+                            THEN 1
+                        END
+                    ) as allocated_entries
+                ")
             )
             ->groupBy(
                 'competitions.id',
@@ -324,7 +376,7 @@ class AdminDashboardController extends Controller
             ->orderBy('competitions.draw_at')
             ->limit(5)
             ->get()
-            ->map(fn($competition) => [
+            ->map(fn ($competition) => [
                 'encrypted_id' => Crypt::encryptString((string) $competition->id),
                 'title' => $competition->title,
                 'draw_at' => Carbon::parse($competition->draw_at)
@@ -334,10 +386,10 @@ class AdminDashboardController extends Controller
             ]);
 
         /*
-    |--------------------------------------------------------------------------
-    | Dashboard Response
-    |--------------------------------------------------------------------------
-    */
+        |--------------------------------------------------------------------------
+        | Dashboard Response
+        |--------------------------------------------------------------------------
+        */
 
         return Inertia::render('Admin/Dashboard', [
             'stats' => [
@@ -370,6 +422,7 @@ class AdminDashboardController extends Controller
             ],
 
             'revenueByCurrency' => $revenueByCurrency,
+            'revenueTrend' => $revenueTrend,
             'paymentCounts' => $paymentCounts,
             'recentOrders' => $recentOrders,
             'recentCustomers' => $recentCustomers,

@@ -300,7 +300,8 @@ onUnmounted(() => {
                 ">
                 Enter now
                 <span class="font-bold">
-                 {{ slide.title }} {{ slide.price }}
+                 <!-- {{ slide.title }} {{ slide.price }} -->
+                 {{ slide.title }}
                 </span>
               </Link>
 
