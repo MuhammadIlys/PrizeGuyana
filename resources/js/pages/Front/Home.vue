@@ -11,6 +11,10 @@ import Stats from '../../Components/Front/Stats.vue';
 import FAQs from '../../Components/Front/FAQs.vue';
 import Howitworks from '../../Components/Front/Howitworks.vue';
 
+import { watch } from 'vue';
+import { usePage } from '@inertiajs/vue3';
+import { useToast } from '@/Composables/useToast';
+
 defineOptions({ layout: FrontLayout });
 const props = defineProps({
   title: String,
@@ -48,6 +52,21 @@ const props = defineProps({
     },
 });
 
+const page = usePage();
+const { toasts, removeToast, addToast } = useToast();
+watch(
+    () => page.props.flash,
+    (flash) => {
+        if (flash?.success) {
+            addToast(flash.success, 'success');
+        }
+
+        if (flash?.error) {
+            addToast(flash.error, 'error');
+        }
+    },
+    { deep: true, immediate: true }
+);
 
 </script>
 

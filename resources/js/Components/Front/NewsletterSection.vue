@@ -34,16 +34,22 @@ const submit = () => {
       <div class="w-full lg:w-auto min-w-full sm:min-w-[450px] z-10">
         <form @submit.prevent="submit" class="flex flex-col gap-3">
 
-          <!-- Input Pill Container (Responsive Grid / Flex Stack) -->
           <div
-            class="relative flex flex-col sm:flex-row items-stretch sm:items-center bg-[#0d0d0d]/90 backdrop-blur-sm border border-neutral-800 rounded-2xl p-1.5 sm:p-1.5 gap-2 sm:gap-0 focus-within:border-amber-500/50 transition-colors shadow-inner">
-            <input v-model="form.email" type="email" id="email" required placeholder="Enter your email address"
-              class="w-full bg-transparent px-4 py-3 text-sm text-white placeholder-neutral-500 focus:outline-none border-none ring-0 focus:ring-0 rounded-xl sm:rounded-none" />
+            class="relative flex flex-col sm:flex-row items-stretch sm:items-center bg-[#0d0d0d]/90 backdrop-blur-sm border border-neutral-800 rounded-2xl p-1.5 gap-2 sm:gap-0 focus-within:border-amber-500/50 transition-colors shadow-inner">
+            <input v-model="form.email" type="email" id="email" required maxlength="255"
+              placeholder="Enter your email address" :disabled="form.processing"
+              class="w-full bg-transparent px-4 py-3 text-sm text-white placeholder-neutral-500 focus:outline-none border-none ring-0 focus:ring-0 rounded-xl sm:rounded-none disabled:opacity-50" />
+
             <button type="submit" :disabled="form.processing"
               class="w-full sm:w-auto flex-shrink-0 px-6 py-3 bg-neutral-800 hover:bg-neutral-700 active:scale-[0.98] text-white font-semibold text-sm rounded-xl border border-neutral-700/80 transition-all shadow-md disabled:opacity-50 text-center">
               {{ form.processing ? 'Saving...' : 'Notify Me' }}
             </button>
           </div>
+
+          <!-- Validation Error -->
+          <p v-if="form.errors.email" class="px-2 text-xs text-red-400">
+            {{ form.errors.email }}
+          </p>
 
           <!-- Privacy Notice -->
           <p class="text-xs text-neutral-400 font-medium px-2 text-center sm:text-left">
