@@ -22,6 +22,8 @@ const dropdowns = ref({
     competitions: false,
     questions: false,
     prizes: false,
+    home: false,
+
 })
 
 const dropdownRoutes = {
@@ -35,6 +37,9 @@ const dropdownRoutes = {
     ],
     prizes: [
         '/admin/competition-prizes',
+    ],
+    home: [
+        '/admin/faqs',
     ],
 }
 
@@ -385,6 +390,50 @@ const childClass = (path, exclude = []) => [
                         <span v-if="!isCollapsed">Customers</span>
                     </Link>
                 </div>
+
+
+
+                <!-- Home -->
+                <div class="mb-3">
+                    <p v-if="!isCollapsed"
+                        class="mb-2 px-3 text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                        Pages
+                    </p>
+                    <button type="button" @click="toggleDropdown('home')" title="Home" :aria-expanded="dropdowns.home"
+                        :class="[
+                            'flex w-full items-center rounded-xl py-2.5 text-xs font-semibold transition-all duration-200',
+                            isSectionActive('/admin/faqs')
+                                ? 'bg-amber-500/5 text-amber-400'
+                                : 'text-neutral-400 hover:bg-[#181818] hover:text-white',
+                            isCollapsed ? 'justify-center px-2' : 'justify-between px-3',
+                        ]">
+                        <span class="flex items-center">
+                            <svg :class="['h-4 w-4 shrink-0', !isCollapsed ? 'mr-3' : '']" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 10.5L12 3l9 7.5M5 9v11h14V9M9 20v-6h6v6" />
+                            </svg>
+
+                            <span v-if="!isCollapsed">Home</span>
+                        </span>
+
+                        <svg v-if="!isCollapsed" :class="[
+                            'h-3.5 w-3.5 transition-transform duration-200',
+                            dropdowns.home ? 'rotate-180' : '',
+                        ]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <!-- Home Submenu -->
+                    <div v-if="!isCollapsed" v-show="dropdowns.home" class="mt-1 space-y-1 pl-9 pr-1">
+                        <Link href="/admin/faqs" @click="navigate" :class="childClass('/admin/faqs')">
+                            FAQs
+                        </Link>
+                    </div>
+                </div>
+
+
 
                 <!-- V1 MODULES AWAITING ROUTE CONFIRMATION -->
                 <div class="mb-5">

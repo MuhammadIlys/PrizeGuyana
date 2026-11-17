@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Front\WinnersController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
@@ -114,6 +115,15 @@ Route::middleware('auth')->prefix('notifications')->name('notifications.')->cont
     Route::patch('/{id}/read', 'markAsRead')->name('read');
     Route::patch('/read-all', 'markAllAsRead')->name('read-all');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Winner Routes
+|--------------------------------------------------------------------------
+*/
+Route::get('/winners', [WinnersController::class, 'index'])
+    ->name('winners');
+
 
 /*
 |--------------------------------------------------------------------------

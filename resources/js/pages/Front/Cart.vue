@@ -230,21 +230,24 @@ const clearCart = () => {
                                 <img :src="item.image" :alt="item.title" class="w-full h-full object-cover" />
                             </div>
 
-                            <div class="flex-1 min-w-0">
-                                <span
-                                    class="text-[10px] font-bold uppercase tracking-wider text-amber-500/90 block mb-1">
-                                    {{ item.category }}
-                                </span>
-                                <h3 class="text-base sm:text-lg font-bold text-white truncate">
-                                    {{ item.title }}
-                                </h3>
-                                <div class="flex items-center gap-3 text-xs text-neutral-400 mt-1">
-                                    <span>Price: <strong class="text-amber-400">${{ item.ticket_price.toFixed(2)
-                                    }}</strong></span>
-                                    <span>•</span>
-                                    <span>Draw: {{ formatDate(item.draw_at) }}</span>
-                                </div>
-                            </div>
+                            <div class="flex-1 min-w-0 overflow-hidden">
+    <span
+        class="text-[10px] font-bold uppercase tracking-wider text-amber-500/90 block mb-1">
+        {{ item.category }}
+    </span>
+
+    <h3 class="text-base sm:text-lg font-bold text-white break-words [overflow-wrap:anywhere] line-clamp-2">
+        {{ item.title }}
+    </h3>
+
+    <div class="flex flex-wrap items-center gap-3 text-xs text-neutral-400 mt-1">
+        <span>
+            Price: <strong class="text-amber-400">${{ item.ticket_price.toFixed(2) }}</strong>
+        </span>
+        <span>•</span>
+        <span>Draw: {{ formatDate(item.draw_at) }}</span>
+    </div>
+</div>
                         </div>
 
                         <!-- Quantity Stepper & Price Summary -->
@@ -270,12 +273,12 @@ const clearCart = () => {
                             </div>
 
                             <!-- Total Price -->
-                            <div class="text-right min-w-[90px]">
+                            <!-- <div class="text-right min-w-[90px]">
                                 <span class="text-xs text-neutral-500 block">Total</span>
                                 <span class="text-lg font-black text-amber-400">
                                     ${{ (item.ticket_price * item.quantity).toFixed(2) }}
                                 </span>
-                            </div>
+                            </div> -->
 
                             <!-- Remove Button -->
                             <button @click="removeItem(item.id)" :disabled="isProcessing(item.id) || isClearingCart"

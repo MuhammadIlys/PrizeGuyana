@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
+use App\Models\Faq;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -31,28 +32,9 @@ class HomeController extends Controller
             ],
         ];
 
-        $faqs = [
-            [
-                'id' => 1,
-                'question' => 'How do I enter a competition?',
-                'answer' => 'Select any active competition from our homepage, pick your desired number of tickets (or use Quick Pick), answer the qualifying entry question, and proceed to checkout.',
-            ],
-            [
-                'id' => 2,
-                'question' => 'How are winners selected?',
-                'answer' => 'All competition draws are broadcast live using a certified random number generator. Winners are determined completely transparently on the scheduled draw date regardless of ticket sales.',
-            ],
-            [
-                'id' => 3,
-                'question' => 'When will I receive my prize if I win?',
-                'answer' => 'Cash prizes are transferred within 24–48 hours of winner verification. Physical rewards, such as vehicles or tech, are arranged for delivery or collection immediately after contact.',
-            ],
-            [
-                'id' => 4,
-                'question' => 'Where can I see my purchased tickets?',
-                'answer' => 'All your active and past tickets are stored in your account dashboard under "My Tickets". You will also receive an instant confirmation email with your ticket numbers upon purchase.',
-            ],
-        ];
+        $faqs = Faq::where('page', 'home')
+            ->where('is_active', true)
+            ->get(['id', 'question', 'answer']);
 
         /*
     |--------------------------------------------------------------------------

@@ -38,6 +38,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     //Competition Prize Management
     Route::resource('competition-prizes', CompetitionPrizeController::class);
 
+    //FAQ'S
+    Route::resource('faqs', FaqController::class);
+
     Route::controller(CompetitionTicketController::class)->prefix('tickets')->name('tickets.')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/{competitionId}', 'show')->name('show');

@@ -41,6 +41,13 @@ const logout = () => {
           :class="{ 'text-orange-300 font-semibold': $page.component === 'Front/Contact' }">
           Contact
         </Link>
+
+        <Link :href="route('winners')" class="transition-colors hover:text-orange-400"
+          :class="{ 'text-orange-300 font-semibold': $page.component === 'Front/Winners' }">
+          Winners
+        </Link>
+
+
       </nav>
 
       <!-- Right Actions Container (Cart Icon + Portal Action Buttons) -->

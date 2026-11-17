@@ -218,7 +218,7 @@ const submitCheckout = () => {
                     </div>
 
                     <!-- Payment information -->
-                    <div class="rounded-2xl border border-neutral-800 bg-[#121212] p-5 shadow-xl sm:p-7">
+                    <!-- <div class="rounded-2xl border border-neutral-800 bg-[#121212] p-5 shadow-xl sm:p-7">
                         <div class="flex items-start gap-4">
                             <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-amber-500/20 bg-amber-500/10 text-amber-400">
                                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -240,7 +240,7 @@ const submitCheckout = () => {
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                 </section>
 
                 <!-- Order summary -->

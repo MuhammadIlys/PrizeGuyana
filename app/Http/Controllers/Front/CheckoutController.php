@@ -15,8 +15,43 @@ use Throwable;
 
 class CheckoutController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        // Clear purchased cart items only after Stripe confirms successful payment.
+        if (
+            $request->query('payment') === 'success' &&
+            $request->filled('session_id')
+        ) {
+            $payment = DB::table('payments as p')
+                ->join('orders as o', 'o.id', '=', 'p.order_id')
+                ->where('p.stripe_checkout_session_id', $request->query('session_id'))
+                ->where('o.user_id', Auth::id())
+                ->where('p.status', 'paid')
+                ->where('o.payment_status', 'paid')
+                ->select('o.id as order_id')
+                ->first();
+
+            if ($payment) {
+                $purchasedCompetitionIds = DB::table('order_items')
+                    ->where('order_id', $payment->order_id)
+                    ->pluck('competition_id')
+                    ->map(fn($id) => (int) $id)
+                    ->all();
+
+                $cart = session()->get('cart', []);
+
+                foreach ($purchasedCompetitionIds as $competitionId) {
+                    unset($cart[$competitionId]);
+                }
+
+                session()->put('cart', $cart);
+
+                return redirect()
+                    ->route('user.orders.show', ['order' => $payment->order_id])
+                    ->with('success', 'Payment successful! Your tickets have been assigned.');
+            }
+        }
+
         $cart = session()->get('cart', []);
 
         if (empty($cart)) {
@@ -50,7 +85,6 @@ class CheckoutController extends Controller
                 'draw_at' => $competition->draw_at,
             ];
         })->filter()->values();
-
 
         if ($items->isEmpty()) {
             session()->forget('cart');
@@ -224,7 +258,7 @@ class CheckoutController extends Controller
 
                     throw new \RuntimeException(
                         $availabilityMessage
-                        . " You requested {$quantity}. Please reduce your quantity."
+                            . " You requested {$quantity}. Please reduce your quantity."
                     );
                 }
 

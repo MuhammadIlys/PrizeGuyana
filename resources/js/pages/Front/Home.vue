@@ -9,6 +9,7 @@ import LatestUpdates from '../../Components/Front/LatestUpdates.vue';
 import NewsletterSection from '../../Components/Front/NewsletterSection.vue';
 import Stats from '../../Components/Front/Stats.vue';
 import FAQs from '../../Components/Front/FAQs.vue';
+import Howitworks from '../../Components/Front/Howitworks.vue';
 
 defineOptions({ layout: FrontLayout });
 const props = defineProps({
@@ -56,6 +57,7 @@ const props = defineProps({
   <EndingToday :endingToday="endingToday" />
   <Tomorrow :tomorrow="tomorrow" />
   <FutureSelection :futureSelection="futureSelection" />
+  <Howitworks />
   <LatestUpdates :latestWinners="latestWinners" />
   <FAQs :faqs="faqs" />
   <NewsletterSection />

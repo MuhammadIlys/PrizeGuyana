@@ -12,7 +12,7 @@ defineProps({
 <template>
     <section class="w-full max-w-7xl mx-auto px-4 py-6 font-sans">
 
-        <!-- Top Skewed "Ending Today" Header Tag -->
+        <!-- Top Skewed "Future Selection" Header Tag -->
         <div class="mb-4 inline-block">
             <div
                 class="bg-amber-500 text-black font-extrabold text-sm sm:text-base tracking-wider px-6 py-1.5 transform -skew-x-12 rounded-sm shadow-md uppercase">
@@ -22,7 +22,8 @@ defineProps({
 
         <!-- Cards Grid -->
         <div
-            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all duration-300">
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 bg-gradient-to-r from-amber-500 to-yellow-400 transition-all duration-300 p-5">
+            <!-- rounded-full -->
             <div v-for="item in futureSelection" :key="item.id"
                 class="bg-[#121212] border border-neutral-800/80 rounded-xl p-3 flex flex-col justify-between shadow-2xl relative">
                 <!-- Card Container -->
